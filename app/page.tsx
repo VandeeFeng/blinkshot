@@ -47,30 +47,30 @@ export default function Home() {
 
   return (
     <div className="flex h-full flex-col px-5">
-      <header className="flex justify-center pt-20 md:justify-end md:pt-3">
-            <h1 className="text-2xl font-bold text-center">
-      Free image generator
-    </h1>
-        <div>
-          <label className="text-xs text-gray-200">
-            [Optional] Add your{" "}
-            <a
-              href="https://api.together.xyz/settings/api-keys"
-              target="_blank"
-              className="underline underline-offset-4 transition hover:text-blue-500"
-            >
-              Together API Key
-            </a>{" "}
-          </label>
-          <Input
-            placeholder="API Key"
-            type="password"
-            value={userAPIKey}
-            className="mt-1 bg-gray-400 text-gray-200 placeholder:text-gray-300"
-            onChange={(e) => setUserAPIKey(e.target.value)}
-          />
-        </div>
-      </header>
+      <header className="flex flex-col items-center pt-20 md:pt-3">
+  <h1 className="text-2xl font-bold text-center mb-4">
+    Free image generator
+  </h1>
+  <div className="w-full md:w-auto md:self-end">
+    <label className="text-xs text-gray-200">
+      [Optional] Add your{" "}
+      <a
+        href="https://api.together.xyz/settings/api-keys"
+        target="_blank"
+        className="underline underline-offset-4 transition hover:text-blue-500"
+      >
+        Together API Key
+      </a>{" "}
+    </label>
+    <Input
+      placeholder="API Key"
+      type="password"
+      value={userAPIKey}
+      className="mt-1 bg-gray-400 text-gray-200 placeholder:text-gray-300"
+      onChange={(e) => setUserAPIKey(e.target.value)}
+    />
+  </div>
+</header>
 
       <div className="flex justify-center">
         <form className="mt-10 w-full max-w-lg">
