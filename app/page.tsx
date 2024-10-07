@@ -48,11 +48,9 @@ export default function Home() {
   return (
     <div className="flex h-full flex-col px-5">
       <header className="flex justify-center pt-20 md:justify-end md:pt-3">
-        <div className="absolute left-1/2 top-6 -translate-x-1/2">
-          <a href="https://www.dub.sh/together-ai" target="_blank">
-            <Logo />
-          </a>
-        </div>
+            <h1 className="text-2xl font-bold text-center">
+      Free image generator
+    </h1>
         <div>
           <label className="text-xs text-gray-200">
             [Optional] Add your{" "}
