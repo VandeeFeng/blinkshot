@@ -4,7 +4,7 @@ import GithubIcon from "@/components/icons/github-icon";
 import XIcon from "@/components/icons/x-icon";
 // import Logo from "@/components/logo"; //
 import Spinner from "@/components/spinner";
-import { Button } from "@/components/ui/button";
+// import { Button } from "@/components/ui/button";//
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import imagePlaceholder from "@/public/image-placeholder.png";
@@ -155,28 +155,7 @@ export default function Home() {
             </a>
           </p>
 
-          <div className="flex gap-6 md:gap-2">
-            <a href="https://github.com/Nutlope/blinkshot" target="_blank">
-              <Button
-                variant="outline"
-                size="sm"
-                className="inline-flex items-center gap-2"
-              >
-                <GithubIcon className="size-4" />
-                GitHub
-              </Button>
-            </a>
-            <a href="https://x.com/nutlope" target="_blank">
-              <Button
-                size="sm"
-                variant="outline"
-                className="inline-flex items-center gap-2"
-              >
-                <XIcon className="size-3" />
-                Twitter
-              </Button>
-            </a>
-          </div>
+          
         </div>
       </footer>
     </div>
