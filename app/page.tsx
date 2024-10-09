@@ -28,6 +28,7 @@ export default function Home() {
     { prompt: string; image: ImageResponse }[]
   >([]);
   let [activeIndex, setActiveIndex] = useState<number>();
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [optimizedPrompt, setOptimizedPrompt] = useState("");
   const [useOptimizedPrompt, setUseOptimizedPrompt] = useState(false);
 
