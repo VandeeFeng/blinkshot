@@ -1,16 +1,5 @@
 "use client";
 
-// import OpenAI from "openai"; // Removed OpenAI import and configuration
-
-const openai = new OpenAI({
-  baseURL: "https://openrouter.ai/api/v1",
-  apiKey: process.env.OPENROUTER_API_KEY,
-  defaultHeaders: {
-    "HTTP-Referer": process.env.YOUR_SITE_URL,
-    "X-Title": process.env.YOUR_SITE_NAME,
-  }
-});
-
 // import GithubIcon from "@/components/icons/github-icon";//
 // import XIcon from "@/components/icons/x-icon";//
 // import Logo from "@/components/logo"; //
@@ -29,28 +18,6 @@ type ImageResponse = {
   b64_json: string;
   timings: { inference: number };
 };
-
-async function optimizePrompt(userPrompt: string): Promise<string> {
-  try {
-    const response = await fetch('/api/optimizePrompt', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ prompt: userPrompt }),
-    });
-
-    if (!response.ok) {
-      throw new Error('Failed to optimize prompt');
-    }
-
-    const data = await response.json();
-    return data.optimizedPrompt;
-  } catch (error) {
-    console.error("Error optimizing prompt:", error);
-    return userPrompt;
-  }
-}
 
 export default function Home() {
   const [prompt, setPrompt] = useState("");
@@ -91,12 +58,6 @@ export default function Home() {
   });
 
   let isDebouncing = prompt !== debouncedPrompt;
-
-  useEffect(() => {
-    if (debouncedPrompt.trim()) {
-      optimizePrompt(debouncedPrompt).then(setOptimizedPrompt);
-    }
-  }, [debouncedPrompt]);
 
   useEffect(() => {
     if (image && !generations.map((g) => g.image).includes(image)) {

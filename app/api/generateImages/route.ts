@@ -3,6 +3,7 @@ import { z } from "zod";
 import { Ratelimit } from "@upstash/ratelimit";
 import { Redis } from "@upstash/redis";
 import { headers } from "next/headers";
+import OpenAI from "openai";
 
 let ratelimit: Ratelimit | undefined;
 
@@ -17,13 +18,46 @@ if (process.env.UPSTASH_REDIS_REST_URL) {
   });
 }
 
+const openai = new OpenAI({
+  baseURL: "https://openrouter.ai/api/v1",
+  apiKey: process.env.OPENROUTER_API_KEY,
+  defaultHeaders: {
+    "HTTP-Referer": process.env.YOUR_SITE_URL,
+    "X-Title": process.env.YOUR_SITE_NAME,
+  }
+});
+
+async function optimizePrompt(userPrompt: string): Promise<string> {
+  try {
+    const completion = await openai.chat.completions.create({
+      model: "meta-llama/llama-3.1-405b-instruct:free",
+      messages: [
+        {
+          role: "system",
+          content: "You are an AI assistant that helps optimize and expand image generation prompts. Provide a detailed and creative expansion of the user's prompt, focusing on visual elements, style, and atmosphere."
+        },
+        {
+          role: "user",
+          content: `Optimize and expand this image generation prompt: "${userPrompt}"`
+        }
+      ]
+    });
+
+    return completion.choices[0].message.content || userPrompt;
+  } catch (error) {
+    console.error("Error optimizing prompt:", error);
+    return userPrompt;
+  }
+}
+
 export async function POST(req: Request) {
   let json = await req.json();
-  let { prompt, userAPIKey, iterativeMode } = z
+  let { prompt, userAPIKey, iterativeMode, useOptimizedPrompt } = z
     .object({
       prompt: z.string(),
       iterativeMode: z.boolean(),
       userAPIKey: z.string().optional(),
+      useOptimizedPrompt: z.boolean(),
     })
     .parse(json);
 
@@ -57,10 +91,15 @@ export async function POST(req: Request) {
     }
   }
 
+  let optimizedPrompt = prompt;
+  if (useOptimizedPrompt) {
+    optimizedPrompt = await optimizePrompt(prompt);
+  }
+
   let response;
   try {
     response = await client.images.create({
-      prompt,
+      prompt: optimizedPrompt,
       model: "black-forest-labs/FLUX.1-schnell",
       width: 1024,
       height: 768,
@@ -79,7 +118,7 @@ export async function POST(req: Request) {
     );
   }
 
-  return Response.json(response.data[0]);
+  return Response.json({ ...response.data[0], optimizedPrompt });
 }
 
 export const runtime = "edge";
