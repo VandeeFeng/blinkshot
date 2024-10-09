@@ -36,9 +36,6 @@ export default function Home() {
   >([]);
   let [activeIndex, setActiveIndex] = useState<number>();
 
-  const [optimizePrompt, setOptimizePrompt] = useState(false);
-  const [optimizedPrompt, setOptimizedPrompt] = useState("");
-
   const { data: image, isFetching } = useQuery({
     placeholderData: (previousData) => previousData,
     queryKey: [debouncedPrompt, optimizePrompt],
@@ -61,7 +58,6 @@ export default function Home() {
             ]
           });
           finalPrompt = completion.choices[0].message.content || prompt;
-          setOptimizedPrompt(finalPrompt);
         } catch (error) {
           console.error('Error optimizing prompt:', error);
         }
