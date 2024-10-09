@@ -1,5 +1,7 @@
 "use client";
 
+import OpenAI from "openai";
+
 // import GithubIcon from "@/components/icons/github-icon";//
 // import XIcon from "@/components/icons/x-icon";//
 // import Logo from "@/components/logo"; //
@@ -19,6 +21,11 @@ type ImageResponse = {
   timings: { inference: number };
 };
 
+const openai = new OpenAI({
+  baseURL: "https://openrouter.ai/api/v1",
+  apiKey: process.env.OPENROUTER_API_KEY
+});
+
 export default function Home() {
   const [prompt, setPrompt] = useState("");
   const [iterativeMode, setIterativeMode] = useState(false);
@@ -29,16 +36,43 @@ export default function Home() {
   >([]);
   let [activeIndex, setActiveIndex] = useState<number>();
 
+  const [optimizePrompt, setOptimizePrompt] = useState(false);
+  const [optimizedPrompt, setOptimizedPrompt] = useState("");
+
   const { data: image, isFetching } = useQuery({
     placeholderData: (previousData) => previousData,
-    queryKey: [debouncedPrompt],
+    queryKey: [debouncedPrompt, optimizePrompt],
     queryFn: async () => {
+      let finalPrompt = prompt;
+
+      if (optimizePrompt) {
+        try {
+          const completion = await openai.chat.completions.create({
+            model: "meta-llama/llama-3.1-405b-instruct:free",
+            messages: [
+              {
+                role: "system",
+                content: "You are an AI assistant that optimizes image generation prompts. Improve the given prompt to make it more detailed and effective for image generation."
+              },
+              {
+                role: "user",
+                content: prompt
+              }
+            ]
+          });
+          finalPrompt = completion.choices[0].message.content || prompt;
+          setOptimizedPrompt(finalPrompt);
+        } catch (error) {
+          console.error('Error optimizing prompt:', error);
+        }
+      }
+
       let res = await fetch("/api/generateImages", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ prompt, userAPIKey, iterativeMode }),
+        body: JSON.stringify({ prompt: finalPrompt, userAPIKey, iterativeMode }),
       });
 
       if (!res.ok) {
@@ -87,6 +121,13 @@ export default function Home() {
       className="mt-1 bg-gray-400 text-gray-200 placeholder:text-gray-300"
       onChange={(e) => setUserAPIKey(e.target.value)}
     />
+    <div className="mt-2 flex items-center justify-end">
+      <label className="mr-2 text-xs text-gray-200">Optimize Prompt</label>
+      <Switch
+        checked={optimizePrompt}
+        onCheckedChange={setOptimizePrompt}
+      />
+    </div>
   </div>
 </header>
 
