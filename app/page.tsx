@@ -53,6 +53,38 @@ export default function Home() {
 
   let isDebouncing = prompt !== debouncedPrompt;
 
+  const [optimizeSettings, setOptimizeSettings] = useState({
+    enabled: false,
+    optimizedPrompt: "",
+  });
+
+  const optimizePrompt = async (inputPrompt: string) => {
+    const res = await fetch("/api/optimizePrompt", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ prompt: inputPrompt }),
+    });
+
+    if (!res.ok) {
+      throw new Error(await res.text());
+    }
+
+    const data = await res.json();
+    setOptimizeSettings(prev => ({
+      ...prev,
+      optimizedPrompt: data.optimizedPrompt,
+    }));
+    setPrompt(data.optimizedPrompt);
+  };
+
+  useEffect(() => {
+    if (optimizeSettings.enabled && prompt.trim()) {
+      optimizePrompt(prompt);
+    }
+  }, [optimizeSettings.enabled, prompt]);
+
   useEffect(() => {
     if (image && !generations.map((g) => g.image).includes(image)) {
       setGenerations((images) => [...images, { prompt, image }]);
@@ -107,6 +139,15 @@ export default function Home() {
                 className={`${isFetching || isDebouncing ? "flex" : "hidden"} absolute bottom-3 right-3 items-center justify-center`}
               >
                 <Spinner className="size-4" />
+              </div>
+              <div className="absolute top-2 right-2 flex items-center space-x-2">
+                <Switch
+                  id="optimize-mode"
+                  checked={optimizeSettings.enabled}
+                  onCheckedChange={(checked) => 
+                    setOptimizeSettings(prev => ({ ...prev, enabled: checked }))
+                  }
+                />
               </div>
             </div>
 
