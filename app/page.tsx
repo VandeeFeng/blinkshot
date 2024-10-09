@@ -1,5 +1,16 @@
 "use client";
 
+import OpenAI from "openai";
+
+const openai = new OpenAI({
+  baseURL: "https://openrouter.ai/api/v1",
+  apiKey: process.env.OPENROUTER_API_KEY,
+  defaultHeaders: {
+    "HTTP-Referer": process.env.YOUR_SITE_URL,
+    "X-Title": process.env.YOUR_SITE_NAME,
+  }
+});
+
 // import GithubIcon from "@/components/icons/github-icon";//
 // import XIcon from "@/components/icons/x-icon";//
 // import Logo from "@/components/logo"; //
@@ -19,6 +30,29 @@ type ImageResponse = {
   timings: { inference: number };
 };
 
+async function optimizePrompt(userPrompt: string): Promise<string> {
+  try {
+    const completion = await openai.chat.completions.create({
+      model: "meta-llama/llama-3.1-405b-instruct:free",
+      messages: [
+        {
+          role: "system",
+          content: "You are an AI assistant that helps optimize and expand image generation prompts. Provide a detailed and creative expansion of the user's prompt, focusing on visual elements, style, and atmosphere."
+        },
+        {
+          role: "user",
+          content: `Optimize and expand this image generation prompt: "${userPrompt}"`
+        }
+      ]
+    });
+
+    return completion.choices[0].message.content || userPrompt;
+  } catch (error) {
+    console.error("Error optimizing prompt:", error);
+    return userPrompt;
+  }
+}
+
 export default function Home() {
   const [prompt, setPrompt] = useState("");
   const [iterativeMode, setIterativeMode] = useState(false);
@@ -28,6 +62,8 @@ export default function Home() {
     { prompt: string; image: ImageResponse }[]
   >([]);
   let [activeIndex, setActiveIndex] = useState<number>();
+  const [optimizedPrompt, setOptimizedPrompt] = useState("");
+  const [useOptimizedPrompt, setUseOptimizedPrompt] = useState(false);
 
   const { data: image, isFetching } = useQuery({
     placeholderData: (previousData) => previousData,
@@ -38,7 +74,11 @@ export default function Home() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ prompt, userAPIKey, iterativeMode }),
+        body: JSON.stringify({ 
+          prompt: useOptimizedPrompt ? optimizedPrompt : prompt, 
+          userAPIKey, 
+          iterativeMode 
+        }),
       });
 
       if (!res.ok) {
@@ -46,12 +86,18 @@ export default function Home() {
       }
       return (await res.json()) as ImageResponse;
     },
-    enabled: !!debouncedPrompt.trim(),
+    enabled: !!(useOptimizedPrompt ? optimizedPrompt.trim() : prompt.trim()),
     staleTime: Infinity,
     retry: false,
   });
 
   let isDebouncing = prompt !== debouncedPrompt;
+
+  useEffect(() => {
+    if (debouncedPrompt.trim()) {
+      optimizePrompt(debouncedPrompt).then(setOptimizedPrompt);
+    }
+  }, [debouncedPrompt]);
 
   useEffect(() => {
     if (image && !generations.map((g) => g.image).includes(image)) {
@@ -94,6 +140,16 @@ export default function Home() {
         <form className="mt-10 w-full max-w-lg">
           <fieldset>
             <div className="relative">
+              <div className="flex justify-between items-center mb-2">
+                <label className="text-sm text-gray-300">Prompt</label>
+                <div className="flex items-center space-x-2">
+                  <label className="text-sm text-gray-300">Use optimized prompt</label>
+                  <Switch
+                    checked={useOptimizedPrompt}
+                    onCheckedChange={setUseOptimizedPrompt}
+                  />
+                </div>
+              </div>
               <Textarea
                 rows={4}
                 spellCheck={false}
@@ -103,6 +159,12 @@ export default function Home() {
                 onChange={(e) => setPrompt(e.target.value)}
                 className="w-full resize-none border-gray-300 border-opacity-50 bg-gray-400 px-4 text-base placeholder-gray-300"
               />
+              {optimizedPrompt && optimizedPrompt !== prompt && (
+                <div className="mt-2 text-sm text-gray-300">
+                  <p>Optimized prompt:</p>
+                  <p className="italic">{optimizedPrompt}</p>
+                </div>
+              )}
               <div
                 className={`${isFetching || isDebouncing ? "flex" : "hidden"} absolute bottom-3 right-3 items-center justify-center`}
               >
