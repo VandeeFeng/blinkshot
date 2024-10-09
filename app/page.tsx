@@ -10,6 +10,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useDebounce } from "@uidotdev/usehooks";
 import Image from "next/image";
 import { useEffect, useState, useRef } from "react";
+import TypewriterEffect from '@/components/TypewriterEffect';
 
 type ImageResponse = {
   b64_json: string;
@@ -36,8 +37,17 @@ export default function Home() {
 
   const [pendingOptimizedPrompt, setPendingOptimizedPrompt] = useState("");
   const [shouldGenerateImage, setShouldGenerateImage] = useState(false);
+  const [showOptimizedPrompt, setShowOptimizedPrompt] = useState(false);
+
+  // 新增一个状态来追踪是否应该开始生成图片
+  const [shouldStartGenerating, setShouldStartGenerating] = useState(false);
+
+  const [lastOptimizedPrompt, setLastOptimizedPrompt] = useState("");
 
   const optimizePrompt = async (inputPrompt: string) => {
+    if (inputPrompt === lastOptimizedPrompt) {
+      return; // 如果输入没有变化，直接返回，不进行优化
+    }
     setIsOptimizing(true);
     try {
       const res = await fetch("/api/optimizePrompt", {
@@ -54,6 +64,8 @@ export default function Home() {
 
       const data = await res.json();
       setPendingOptimizedPrompt(data.optimizedPrompt);
+      setShowOptimizedPrompt(true);
+      setLastOptimizedPrompt(inputPrompt); // 更新最后优化的输入
     } catch (error) {
       console.error('Error optimizing prompt:', error);
     } finally {
@@ -65,23 +77,35 @@ export default function Home() {
     setOptimizeSettings(prev => ({ ...prev, optimizedPrompt: pendingOptimizedPrompt }));
     setPendingOptimizedPrompt("");
     setShouldGenerateImage(true);
+    // 不需要设置 setShowOptimizedPrompt(false)，因为我们现在总是显示优化后的提示
   };
 
   const rejectOptimizedPrompt = () => {
     setPendingOptimizedPrompt("");
     setShouldGenerateImage(true);
+    setShowOptimizedPrompt(false);
   };
 
   useEffect(() => {
     if (debouncedPrompt.trim()) {
-      if (optimizeSettings.enabled && !optimizeSettings.optimizedPrompt) {
-        optimizePrompt(debouncedPrompt);
-        setShouldGenerateImage(false);
+      if (optimizeSettings.enabled) {
+        if (!pendingOptimizedPrompt && !optimizeSettings.optimizedPrompt && debouncedPrompt !== lastOptimizedPrompt) {
+          optimizePrompt(debouncedPrompt);
+          setShouldGenerateImage(false);
+        }
       } else {
         setShouldGenerateImage(true);
       }
+      setShouldStartGenerating(true);
+    } else {
+      setOptimizeSettings(prev => ({ ...prev, optimizedPrompt: "" }));
+      setPendingOptimizedPrompt("");
+      setShouldGenerateImage(false);
+      setShowOptimizedPrompt(false);
+      setShouldStartGenerating(false);
+      setLastOptimizedPrompt(""); // 重置最后优化的输入
     }
-  }, [optimizeSettings.enabled, debouncedPrompt, optimizeSettings.optimizedPrompt]);
+  }, [debouncedPrompt, optimizeSettings.enabled, pendingOptimizedPrompt, optimizeSettings.optimizedPrompt, lastOptimizedPrompt]);
 
   const currentPrompt = optimizeSettings.enabled && optimizeSettings.optimizedPrompt
     ? optimizeSettings.optimizedPrompt
@@ -107,7 +131,7 @@ export default function Home() {
       }
       return (await res.json()) as ImageResponse;
     },
-    enabled: !!currentPrompt.trim() && !isOptimizing && shouldGenerateImage,
+    enabled: !!currentPrompt.trim() && !isOptimizing && shouldGenerateImage && shouldStartGenerating && (!optimizeSettings.enabled || !!optimizeSettings.optimizedPrompt),
     staleTime: Infinity,
     retry: false,
   });
@@ -124,6 +148,25 @@ export default function Home() {
 
   let activeImage =
     activeIndex !== undefined ? generations[activeIndex].image : undefined;
+
+  const handlePromptChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const newValue = e.target.value;
+    setPrompt(newValue);
+    if (!newValue.trim()) {
+      setOptimizeSettings(prev => ({ ...prev, optimizedPrompt: "" }));
+      setPendingOptimizedPrompt("");
+      setShowOptimizedPrompt(false);
+      setShouldGenerateImage(false);
+      setShouldStartGenerating(false);
+      setLastOptimizedPrompt(""); // 重置最后优化的输入
+    } else if (newValue !== prompt) {
+      setOptimizeSettings(prev => ({ ...prev, optimizedPrompt: "" }));
+      setPendingOptimizedPrompt("");
+      setShowOptimizedPrompt(false);
+      setShouldGenerateImage(false);
+      setShouldStartGenerating(false);
+    }
+  };
 
   return (
     <div className="flex h-full flex-col px-5">
@@ -163,12 +206,12 @@ export default function Home() {
                 placeholder="Describe your dream..."
                 required
                 value={prompt}
-                onChange={(e) => setPrompt(e.target.value)}
+                onChange={handlePromptChange}
                 className="w-full resize-none border-gray-300 border-opacity-50 bg-gray-400 px-4 text-base placeholder-gray-300"
               />
-              {optimizeSettings.enabled && pendingOptimizedPrompt && (
+              {optimizeSettings.enabled && pendingOptimizedPrompt && showOptimizedPrompt && (
                 <div className="mt-2 text-sm text-gray-300">
-                  <p>AI optimized: {pendingOptimizedPrompt}</p>
+                  <p>AI optimized: <TypewriterEffect text={pendingOptimizedPrompt} /></p>
                   <div className="mt-2 flex justify-end space-x-2">
                     <Button onClick={acceptOptimizedPrompt} variant="secondary" size="sm">
                       Accept
@@ -179,9 +222,9 @@ export default function Home() {
                   </div>
                 </div>
               )}
-              {optimizeSettings.enabled && optimizeSettings.optimizedPrompt && !pendingOptimizedPrompt && (
+              {optimizeSettings.enabled && optimizeSettings.optimizedPrompt && (
                 <div className="mt-2 text-sm text-gray-300">
-                  Using AI optimized: {optimizeSettings.optimizedPrompt}
+                  Using AI optimized: <TypewriterEffect text={optimizeSettings.optimizedPrompt} />
                 </div>
               )}
               <div
@@ -212,8 +255,14 @@ export default function Home() {
                   checked={optimizeSettings.enabled}
                   onCheckedChange={(checked) => {
                     setOptimizeSettings(prev => ({ ...prev, enabled: checked, optimizedPrompt: "" }));
-                    if (checked && debouncedPrompt.trim()) {
-                      optimizePrompt(debouncedPrompt);
+                    if (checked) {
+                      // 不立即触发优化，让 useEffect 处理
+                      setShouldGenerateImage(false);
+                      setShouldStartGenerating(false);
+                    } else {
+                      // 如果关闭 AI 模式，立即允许生成图片
+                      setShouldGenerateImage(true);
+                      setShouldStartGenerating(true);
                     }
                   }}
                 />
