@@ -31,7 +31,8 @@ export default function Home() {
   let [activeIndex, setActiveIndex] = useState<number>();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  const debouncedPrompt = useDebounce(prompt, 300);
+  // 将 debounce 时间从 300ms 增加到 1500ms (1.5秒)
+  const debouncedPrompt = useDebounce(prompt, 1500);
 
   const [pendingOptimizedPrompt, setPendingOptimizedPrompt] = useState("");
   const [shouldGenerateImage, setShouldGenerateImage] = useState(false);
@@ -72,11 +73,13 @@ export default function Home() {
   };
 
   useEffect(() => {
-    if (optimizeSettings.enabled && debouncedPrompt.trim()) {
-      optimizePrompt(debouncedPrompt);
-      setShouldGenerateImage(false);
-    } else if (!optimizeSettings.enabled) {
-      setShouldGenerateImage(true);
+    if (debouncedPrompt.trim()) {
+      if (optimizeSettings.enabled) {
+        optimizePrompt(debouncedPrompt);
+        setShouldGenerateImage(false);
+      } else {
+        setShouldGenerateImage(true);
+      }
     }
   }, [optimizeSettings.enabled, debouncedPrompt]);
 
@@ -125,8 +128,8 @@ export default function Home() {
   return (
     <div className="flex h-full flex-col px-5">
       <header className="flex flex-col items-center pt-20 md:pt-3">
-  <h1 className="text-2xl font-bold text-center mb-4">
-    Free image generator
+  <h1 className="text-4xl font-bold text-center mb-4">
+    Morpheus Dream Interpreter
   </h1>
   <div className="w-full md:w-auto md:self-end">
     <label className="text-xs text-gray-200">
@@ -157,7 +160,7 @@ export default function Home() {
                 ref={textareaRef}
                 rows={4}
                 spellCheck={false}
-                placeholder="Describe your image..."
+                placeholder="Describe your dream..."
                 required
                 value={prompt}
                 onChange={(e) => setPrompt(e.target.value)}
@@ -226,11 +229,12 @@ export default function Home() {
         {!activeImage || !prompt ? (
           <div className="max-w-xl md:max-w-4xl lg:max-w-3xl">
             <p className="text-xl font-semibold text-gray-200 md:text-3xl lg:text-4xl">
-              Generate images in real-time
+              Dream is the bridge between consciousness and the unconscious. 
             </p>
             <p className="mt-4 text-balance text-sm text-gray-300 md:text-base lg:text-lg">
-              Enter a prompt and generate images in milliseconds as you type.
-              Powered by Flux on Together AI.
+              Enter a prompt and generate images in milliseconds as you type to reveal your hidden dreams.
+              <br/>
+              The AI mode can automatically optimize your prompt.
             </p>
           </div>
         ) : (
