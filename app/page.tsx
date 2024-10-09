@@ -28,9 +28,6 @@ export default function Home() {
     { prompt: string; image: ImageResponse }[]
   >([]);
   let [activeIndex, setActiveIndex] = useState<number>();
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [optimizedPrompt, setOptimizedPrompt] = useState("");
-  const [useOptimizedPrompt, setUseOptimizedPrompt] = useState(false);
 
   const { data: image, isFetching } = useQuery({
     placeholderData: (previousData) => previousData,
@@ -41,11 +38,7 @@ export default function Home() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ 
-          prompt: useOptimizedPrompt ? optimizedPrompt : prompt, 
-          userAPIKey, 
-          iterativeMode 
-        }),
+        body: JSON.stringify({ prompt, userAPIKey, iterativeMode }),
       });
 
       if (!res.ok) {
@@ -53,7 +46,7 @@ export default function Home() {
       }
       return (await res.json()) as ImageResponse;
     },
-    enabled: !!(useOptimizedPrompt ? optimizedPrompt.trim() : prompt.trim()),
+    enabled: !!debouncedPrompt.trim(),
     staleTime: Infinity,
     retry: false,
   });
@@ -101,16 +94,6 @@ export default function Home() {
         <form className="mt-10 w-full max-w-lg">
           <fieldset>
             <div className="relative">
-              <div className="flex justify-between items-center mb-2">
-                <label className="text-sm text-gray-300">Prompt</label>
-                <div className="flex items-center space-x-2">
-                  <label className="text-sm text-gray-300">Use optimized prompt</label>
-                  <Switch
-                    checked={useOptimizedPrompt}
-                    onCheckedChange={setUseOptimizedPrompt}
-                  />
-                </div>
-              </div>
               <Textarea
                 rows={4}
                 spellCheck={false}
@@ -120,12 +103,6 @@ export default function Home() {
                 onChange={(e) => setPrompt(e.target.value)}
                 className="w-full resize-none border-gray-300 border-opacity-50 bg-gray-400 px-4 text-base placeholder-gray-300"
               />
-              {optimizedPrompt && optimizedPrompt !== prompt && (
-                <div className="mt-2 text-sm text-gray-300">
-                  <p>Optimized prompt:</p>
-                  <p className="italic">{optimizedPrompt}</p>
-                </div>
-              )}
               <div
                 className={`${isFetching || isDebouncing ? "flex" : "hidden"} absolute bottom-3 right-3 items-center justify-center`}
               >
