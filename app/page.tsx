@@ -1,18 +1,15 @@
 "use client";
 
-// import GithubIcon from "@/components/icons/github-icon";//
-// import XIcon from "@/components/icons/x-icon";//
-// import Logo from "@/components/logo"; //
 import Spinner from "@/components/spinner";
-// import { Button } from "@/components/ui/button";//
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ui/button";
 import imagePlaceholder from "@/public/image-placeholder.png";
 import { useQuery } from "@tanstack/react-query";
 import { useDebounce } from "@uidotdev/usehooks";
 import Image from "next/image";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 
 type ImageResponse = {
   b64_json: string;
@@ -23,22 +20,83 @@ export default function Home() {
   const [prompt, setPrompt] = useState("");
   const [iterativeMode, setIterativeMode] = useState(false);
   const [userAPIKey, setUserAPIKey] = useState("");
-  const debouncedPrompt = useDebounce(prompt, 300);
+  const [optimizeSettings, setOptimizeSettings] = useState({
+    enabled: false,
+    optimizedPrompt: "",
+  });
+  const [isOptimizing, setIsOptimizing] = useState(false);
   const [generations, setGenerations] = useState<
     { prompt: string; image: ImageResponse }[]
   >([]);
   let [activeIndex, setActiveIndex] = useState<number>();
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  const debouncedPrompt = useDebounce(prompt, 300);
+
+  const [pendingOptimizedPrompt, setPendingOptimizedPrompt] = useState("");
+  const [shouldGenerateImage, setShouldGenerateImage] = useState(false);
+
+  const optimizePrompt = async (inputPrompt: string) => {
+    setIsOptimizing(true);
+    try {
+      const res = await fetch("/api/optimizePrompt", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ prompt: inputPrompt }),
+      });
+
+      if (!res.ok) {
+        throw new Error(await res.text());
+      }
+
+      const data = await res.json();
+      setPendingOptimizedPrompt(data.optimizedPrompt);
+    } catch (error) {
+      console.error('Error optimizing prompt:', error);
+    } finally {
+      setIsOptimizing(false);
+    }
+  };
+
+  const acceptOptimizedPrompt = () => {
+    setOptimizeSettings(prev => ({ ...prev, optimizedPrompt: pendingOptimizedPrompt }));
+    setPendingOptimizedPrompt("");
+    setShouldGenerateImage(true);
+  };
+
+  const rejectOptimizedPrompt = () => {
+    setPendingOptimizedPrompt("");
+    setShouldGenerateImage(true);
+  };
+
+  useEffect(() => {
+    if (optimizeSettings.enabled && debouncedPrompt.trim()) {
+      optimizePrompt(debouncedPrompt);
+      setShouldGenerateImage(false);
+    } else if (!optimizeSettings.enabled) {
+      setShouldGenerateImage(true);
+    }
+  }, [optimizeSettings.enabled, debouncedPrompt]);
+
+  const currentPrompt = optimizeSettings.enabled && optimizeSettings.optimizedPrompt
+    ? optimizeSettings.optimizedPrompt
+    : debouncedPrompt;
 
   const { data: image, isFetching } = useQuery({
-    placeholderData: (previousData) => previousData,
-    queryKey: [debouncedPrompt],
+    queryKey: [currentPrompt, iterativeMode],
     queryFn: async () => {
       let res = await fetch("/api/generateImages", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ prompt, userAPIKey, iterativeMode }),
+        body: JSON.stringify({ 
+          prompt: currentPrompt, 
+          userAPIKey, 
+          iterativeMode 
+        }),
       });
 
       if (!res.ok) {
@@ -46,51 +104,20 @@ export default function Home() {
       }
       return (await res.json()) as ImageResponse;
     },
-    enabled: !!debouncedPrompt.trim(),
+    enabled: !!currentPrompt.trim() && !isOptimizing && shouldGenerateImage,
     staleTime: Infinity,
     retry: false,
   });
 
-  let isDebouncing = prompt !== debouncedPrompt;
-
-  const [optimizeSettings, setOptimizeSettings] = useState({
-    enabled: false,
-    optimizedPrompt: "",
-  });
-
-  const optimizePrompt = async (inputPrompt: string) => {
-    const res = await fetch("/api/optimizePrompt", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ prompt: inputPrompt }),
-    });
-
-    if (!res.ok) {
-      throw new Error(await res.text());
-    }
-
-    const data = await res.json();
-    setOptimizeSettings(prev => ({
-      ...prev,
-      optimizedPrompt: data.optimizedPrompt,
-    }));
-    setPrompt(data.optimizedPrompt);
-  };
-
-  useEffect(() => {
-    if (optimizeSettings.enabled && prompt.trim()) {
-      optimizePrompt(prompt);
-    }
-  }, [optimizeSettings.enabled, prompt]);
-
   useEffect(() => {
     if (image && !generations.map((g) => g.image).includes(image)) {
-      setGenerations((images) => [...images, { prompt, image }]);
+      setGenerations((images) => [...images, { 
+        prompt: currentPrompt, 
+        image 
+      }]);
       setActiveIndex(generations.length);
     }
-  }, [generations, image, prompt]);
+  }, [generations, image, currentPrompt]);
 
   let activeImage =
     activeIndex !== undefined ? generations[activeIndex].image : undefined;
@@ -127,6 +154,7 @@ export default function Home() {
           <fieldset>
             <div className="relative">
               <Textarea
+                ref={textareaRef}
                 rows={4}
                 spellCheck={false}
                 placeholder="Describe your image..."
@@ -135,19 +163,28 @@ export default function Home() {
                 onChange={(e) => setPrompt(e.target.value)}
                 className="w-full resize-none border-gray-300 border-opacity-50 bg-gray-400 px-4 text-base placeholder-gray-300"
               />
+              {optimizeSettings.enabled && pendingOptimizedPrompt && (
+                <div className="mt-2 text-sm text-gray-300">
+                  <p>AI optimized: {pendingOptimizedPrompt}</p>
+                  <div className="mt-2 flex justify-end space-x-2">
+                    <Button onClick={acceptOptimizedPrompt} variant="secondary" size="sm">
+                      Accept
+                    </Button>
+                    <Button onClick={rejectOptimizedPrompt} variant="outline" size="sm">
+                      Reject
+                    </Button>
+                  </div>
+                </div>
+              )}
+              {optimizeSettings.enabled && optimizeSettings.optimizedPrompt && !pendingOptimizedPrompt && (
+                <div className="mt-2 text-sm text-gray-300">
+                  Using AI optimized: {optimizeSettings.optimizedPrompt}
+                </div>
+              )}
               <div
-                className={`${isFetching || isDebouncing ? "flex" : "hidden"} absolute bottom-3 right-3 items-center justify-center`}
+                className={`${isFetching || isOptimizing ? "flex" : "hidden"} absolute bottom-3 right-3 items-center justify-center`}
               >
                 <Spinner className="size-4" />
-              </div>
-              <div className="absolute top-2 right-2 flex items-center space-x-2">
-                <Switch
-                  id="optimize-mode"
-                  checked={optimizeSettings.enabled}
-                  onCheckedChange={(checked) => 
-                    setOptimizeSettings(prev => ({ ...prev, enabled: checked }))
-                  }
-                />
               </div>
             </div>
 
@@ -160,6 +197,24 @@ export default function Home() {
                 <Switch
                   checked={iterativeMode}
                   onCheckedChange={setIterativeMode}
+                />
+              </label>
+              <label
+                className="inline-flex items-center gap-2 ml-4"
+                title="Optimize prompt using AI"
+              >
+                AI mode
+                <Switch
+                  id="optimize-mode"
+                  checked={optimizeSettings.enabled}
+                  onCheckedChange={(checked) => {
+                    setOptimizeSettings(prev => ({ ...prev, enabled: checked }));
+                    if (!checked) {
+                      setOptimizeSettings(prev => ({ ...prev, optimizedPrompt: "" }));
+                    } else if (debouncedPrompt.trim()) {
+                      optimizePrompt(debouncedPrompt);
+                    }
+                  }}
                 />
               </label>
             </div>
