@@ -279,9 +279,9 @@ export default function Home() {
               Dream is the bridge between consciousness and the unconscious. 
             </p>
             <p className="mt-4 text-balance text-sm text-gray-300 md:text-base lg:text-lg">
-              Enter a prompt and generate images in milliseconds as you type to reveal your hidden dreams.
+              Enter a prompt to quickly generate images that reveal your hidden dreams.
               <br/>
-              The AI mode can automatically optimize your prompt.
+              Use AI mode to automatically enhance your prompts for more vivid results.
             </p>
           </div>
         ) : (
