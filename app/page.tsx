@@ -1,6 +1,6 @@
 "use client";
 
-import OpenAI from "openai";
+// import OpenAI from "openai"; // Removed OpenAI import and configuration
 
 const openai = new OpenAI({
   baseURL: "https://openrouter.ai/api/v1",
@@ -32,21 +32,20 @@ type ImageResponse = {
 
 async function optimizePrompt(userPrompt: string): Promise<string> {
   try {
-    const completion = await openai.chat.completions.create({
-      model: "meta-llama/llama-3.1-405b-instruct:free",
-      messages: [
-        {
-          role: "system",
-          content: "You are an AI assistant that helps optimize and expand image generation prompts. Provide a detailed and creative expansion of the user's prompt, focusing on visual elements, style, and atmosphere."
-        },
-        {
-          role: "user",
-          content: `Optimize and expand this image generation prompt: "${userPrompt}"`
-        }
-      ]
+    const response = await fetch('/api/optimizePrompt', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ prompt: userPrompt }),
     });
 
-    return completion.choices[0].message.content || userPrompt;
+    if (!response.ok) {
+      throw new Error('Failed to optimize prompt');
+    }
+
+    const data = await response.json();
+    return data.optimizedPrompt;
   } catch (error) {
     console.error("Error optimizing prompt:", error);
     return userPrompt;
