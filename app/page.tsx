@@ -31,7 +31,7 @@ export default function Home() {
   let [activeIndex, setActiveIndex] = useState<number>();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  // 将 debounce 时间从 300ms 增加到 1500ms (1.5秒)
+  // 将 debounce 时间保持在 1500ms (1.5秒)
   const debouncedPrompt = useDebounce(prompt, 1500);
 
   const [pendingOptimizedPrompt, setPendingOptimizedPrompt] = useState("");
@@ -74,14 +74,14 @@ export default function Home() {
 
   useEffect(() => {
     if (debouncedPrompt.trim()) {
-      if (optimizeSettings.enabled) {
+      if (optimizeSettings.enabled && !optimizeSettings.optimizedPrompt) {
         optimizePrompt(debouncedPrompt);
         setShouldGenerateImage(false);
       } else {
         setShouldGenerateImage(true);
       }
     }
-  }, [optimizeSettings.enabled, debouncedPrompt]);
+  }, [optimizeSettings.enabled, debouncedPrompt, optimizeSettings.optimizedPrompt]);
 
   const currentPrompt = optimizeSettings.enabled && optimizeSettings.optimizedPrompt
     ? optimizeSettings.optimizedPrompt
@@ -211,10 +211,8 @@ export default function Home() {
                   id="optimize-mode"
                   checked={optimizeSettings.enabled}
                   onCheckedChange={(checked) => {
-                    setOptimizeSettings(prev => ({ ...prev, enabled: checked }));
-                    if (!checked) {
-                      setOptimizeSettings(prev => ({ ...prev, optimizedPrompt: "" }));
-                    } else if (debouncedPrompt.trim()) {
+                    setOptimizeSettings(prev => ({ ...prev, enabled: checked, optimizedPrompt: "" }));
+                    if (checked && debouncedPrompt.trim()) {
                       optimizePrompt(debouncedPrompt);
                     }
                   }}
