@@ -39,7 +39,7 @@ export async function POST(req: Request) {
 
   try {
     const completion = await openai.chat.completions.create({
-      model: "meta-llama/llama-3.1-405b-instruct:free",
+      model: "google/gemma-2-9b-it:free",
       messages: [
         {
           role: "system",
