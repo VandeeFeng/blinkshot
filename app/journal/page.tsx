@@ -14,8 +14,9 @@ import { toast } from "sonner";
 export default function JournalPage() {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [journals, setJournals] = useState<DreamJournal[]>([]);
-  const [weekJournals, setWeekJournals] = useState<DreamJournal[]>([]);
+  const [filteredJournals, setFilteredJournals] = useState<DreamJournal[]>([]);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [isWeekView, setIsWeekView] = useState(true);
 
   useEffect(() => {
     fetchJournals();
@@ -23,17 +24,27 @@ export default function JournalPage() {
 
   useEffect(() => {
     if (journals.length > 0) {
-      const weekStart = startOfWeek(selectedDate);
-      const weekEnd = endOfWeek(selectedDate);
-      
-      const filteredJournals = journals.filter(journal => {
-        const journalDate = new Date(journal.dream_date);
-        return journalDate >= weekStart && journalDate <= weekEnd;
-      });
-      
-      setWeekJournals(filteredJournals);
+      let filtered;
+      if (isWeekView) {
+        const weekStart = startOfWeek(selectedDate);
+        const weekEnd = endOfWeek(selectedDate);
+        filtered = journals.filter(journal => {
+          const journalDate = new Date(journal.dream_date);
+          return journalDate >= weekStart && journalDate <= weekEnd;
+        });
+      } else {
+        filtered = journals.filter(journal => {
+          const journalDate = new Date(journal.dream_date);
+          return (
+            journalDate.getDate() === selectedDate.getDate() &&
+            journalDate.getMonth() === selectedDate.getMonth() &&
+            journalDate.getFullYear() === selectedDate.getFullYear()
+          );
+        });
+      }
+      setFilteredJournals(filtered);
     }
-  }, [selectedDate, journals]);
+  }, [selectedDate, journals, isWeekView]);
 
   async function fetchJournals() {
     const { data, error } = await supabase
@@ -64,9 +75,20 @@ export default function JournalPage() {
     }
 
     setJournals(journals.filter(j => j.id !== journalId));
-    setWeekJournals(weekJournals.filter(j => j.id !== journalId));
+    setFilteredJournals(filteredJournals.filter(j => j.id !== journalId));
     toast.success('Journal deleted successfully');
   }
+
+  const handleDateSelect = (date: Date | undefined) => {
+    if (date) {
+      setSelectedDate(date);
+      setIsWeekView(false);
+    }
+  };
+
+  const getJournalDates = () => {
+    return journals.map(journal => new Date(journal.dream_date));
+  };
 
   return (
     <div className="container max-w-5xl mx-auto p-4">
@@ -89,10 +111,13 @@ export default function JournalPage() {
       <div className="grid grid-cols-1 md:grid-cols-[1fr,auto] gap-6">
         <div className="space-y-4">
           <h2 className="text-xl font-semibold mb-3">
-            Week of {format(selectedDate, 'MMM dd, yyyy')}
+            {isWeekView 
+              ? `Week of ${format(startOfWeek(selectedDate), 'MMM dd')} - ${format(endOfWeek(selectedDate), 'MMM dd, yyyy')}`
+              : format(selectedDate, 'MMM dd, yyyy')
+            }
           </h2>
           
-          {weekJournals.map((journal) => (
+          {filteredJournals.map((journal) => (
             <div 
               key={journal.id}
               className="group bg-gray-800/50 p-3 rounded-lg shadow-lg backdrop-blur-sm 
@@ -154,7 +179,23 @@ export default function JournalPage() {
           <Calendar
             mode="single"
             selected={selectedDate}
-            onSelect={(date) => date && setSelectedDate(date)}
+            onSelect={handleDateSelect}
+            modifiers={{
+              hasJournal: getJournalDates()
+            }}
+            modifiersStyles={{
+              hasJournal: {
+                backgroundColor: '#34403a',
+                color: '#ffffff',
+                fontWeight: '500',
+                width: '1.7rem',
+                height: '1.7rem',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                borderRadius: '0.375rem'
+              }
+            }}
             className={cn(
               "text-gray-200",
               "[&_table]:w-fit",
@@ -168,48 +209,18 @@ export default function JournalPage() {
               "[&_.rdp-day.rdp-day_selected]:bg-blue-600",
               "[&_.rdp-day.rdp-day_selected]:rounded-md",
               "[&_.rdp-caption]:mb-4",
-              "[&_button>svg]:text-white !important",
-              "[&_button>svg]:w-4",
-              "[&_button>svg]:h-4",
+              "[&_button>svg]:text-gray-200",
+              "[&_button>svg]:opacity-100",
+              "[&_button>svg]:w-5",
+              "[&_button>svg]:h-5",
               "[&_button]:hover:bg-gray-700/50",
               "[&_button]:transition-colors",
-              "[&_button]:border-0"
+              "[&_button]:border-0",
+              "[&_.rdp-nav_button]:bg-gray-700/30",
+              "[&_.rdp-nav_button]:p-1.5",
+              "[&_.rdp-nav_button]:rounded-md",
+              "[&_.rdp-nav_button]:hover:bg-gray-700/50"
             )}
-            classNames={{
-              months: "flex flex-col space-y-4",
-              month: "space-y-4",
-              caption: "flex justify-center pt-1 relative items-center px-10",
-              caption_label: "text-sm font-medium",
-              nav: "space-x-1 flex items-center",
-              nav_button: cn(
-                "h-7 w-7 p-0 opacity-100 bg-transparent",
-                "hover:bg-gray-700/50",
-                "text-white"
-              ),
-              nav_button_previous: "absolute left-1",
-              nav_button_next: "absolute right-1",
-              table: "w-fit border-collapse",
-              head_row: "flex justify-between w-full",
-              head_cell: "text-muted-foreground w-10 font-normal text-[0.8rem] text-center",
-              row: "flex justify-between w-full mt-2",
-              cell: "text-center text-sm p-0 relative [&:has([aria-selected])]:bg-accent first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md focus-within:relative focus-within:z-20",
-              day: "h-9 w-9 p-0 font-normal",
-              day_range_end: "day-range-end",
-              day_selected: "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground",
-              day_today: "bg-accent text-accent-foreground",
-              day_outside: "text-muted-foreground opacity-50",
-              day_disabled: "text-muted-foreground opacity-50",
-              day_range_middle: "aria-selected:bg-accent aria-selected:text-accent-foreground",
-              day_hidden: "invisible",
-            }}
-            components={{
-              IconLeft: () => (
-                <ChevronLeft className="h-4 w-4 text-white fill-white stroke-white !important" />
-              ),
-              IconRight: () => (
-                <ChevronRight className="h-4 w-4 text-white fill-white stroke-white !important" />
-              ),
-            }}
           />
         </div>
       </div>
