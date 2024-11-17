@@ -11,6 +11,24 @@ import { useDebounce } from "@uidotdev/usehooks";
 import Image from "next/image";
 import { useEffect, useState, useRef } from "react";
 import TypewriterEffect from '@/components/TypewriterEffect';
+import Link from "next/link";
+import { ArrowRight } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { useRouter, useSearchParams } from 'next/navigation';
+import { supabase } from "@/lib/supabase";
+import { format } from "date-fns";
+import { toast } from "sonner";
+
+export type DreamJournal = {
+  id: string;
+  user_id: string;
+  title: string;
+  content: string;
+  dream_date: string;
+  generated_image_b64?: string;
+  created_at: string;
+  updated_at: string;
+};
 
 type ImageResponse = {
   b64_json: string;
@@ -143,6 +161,13 @@ export default function Home() {
         image 
       }]);
       setActiveIndex(generations.length);
+      
+      // 将当前状态添加到 URL
+      const searchParams = new URLSearchParams(window.location.search);
+      searchParams.set('prompt', currentPrompt);
+      searchParams.set('activeIndex', String(generations.length));
+      const newUrl = `${window.location.pathname}?${searchParams.toString()}`;
+      window.history.replaceState({}, '', newUrl);
     }
   }, [generations, image, currentPrompt]);
 
@@ -165,6 +190,53 @@ export default function Home() {
       setShowOptimizedPrompt(false);
       setShouldGenerateImage(false);
       setShouldStartGenerating(false);
+    }
+  };
+
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
+  useEffect(() => {
+    const savedPrompt = searchParams.get('prompt');
+    const savedActiveIndex = searchParams.get('activeIndex');
+    
+    if (savedPrompt) {
+      setPrompt(savedPrompt);
+      setShouldGenerateImage(true);
+      setShouldStartGenerating(true);
+    }
+    
+    if (savedActiveIndex) {
+      setActiveIndex(parseInt(savedActiveIndex));
+    }
+  }, [searchParams]);
+
+  // 添加一个保存到日志的函数
+  const handleSaveToJournal = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    
+    if (!activeImage) return;
+    
+    try {
+      const { error } = await supabase
+        .from('dream_journals')
+        .insert([{
+          title: `Dream on ${format(new Date(), 'MMM dd, yyyy')}`,
+          content: prompt,
+          dream_date: new Date().toISOString(),
+          generated_image_b64: activeImage.b64_json
+        }]);
+
+      if (error) {
+        console.error('Error saving to journal:', error);
+        toast.error('Failed to save to journal');
+        return;
+      }
+
+      toast.success('Successfully saved to journal');
+    } catch (error) {
+      console.error('Error saving to journal:', error);
+      toast.error('Failed to save to journal');
     }
   };
 
@@ -194,6 +266,21 @@ export default function Home() {
     />
   </div>
 </header>
+
+<div className="flex justify-center mt-4">
+  <Link 
+    href="/journal"
+    className={cn(
+      "flex items-center gap-2 text-gray-300 hover:text-blue-400 transition-colors",
+      "bg-gray-800/70 p-2 rounded-lg border border-gray-600",
+      "hover:border-blue-500/50 hover:bg-gray-800/80",
+      "group"
+    )}
+  >
+    <span>Dream Journal</span>
+    <ArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
+  </Link>
+</div>
 
       <div className="flex justify-center">
         <form className="mt-10 w-full max-w-lg">
@@ -296,6 +383,25 @@ export default function Home() {
                 alt=""
                 className={`${isFetching ? "animate-pulse" : ""} max-w-full rounded-lg object-cover shadow-sm shadow-black`}
               />
+              
+              <div className="mt-4 p-3 bg-gray-800/70 border border-gray-600 rounded-lg flex items-center justify-between">
+                <p className="text-gray-200">
+                  Want to save this dream visualization to your journal?
+                </p>
+                <Link 
+                  href="/journal"
+                  onClick={handleSaveToJournal}
+                  className={cn(
+                    "flex items-center gap-2 text-gray-300 hover:text-blue-400 transition-colors",
+                    "bg-gray-800/70 p-2 rounded-lg border border-gray-600",
+                    "hover:border-blue-500/50 hover:bg-gray-800/80",
+                    "group"
+                  )}
+                >
+                  <span>Save to Journal</span>
+                  <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+                </Link>
+              </div>
             </div>
 
             <div className="mt-4 flex gap-4 overflow-x-scroll pb-4">
