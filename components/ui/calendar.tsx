@@ -2,10 +2,18 @@
 
 import * as React from "react";
 import { ChevronLeftIcon, ChevronRightIcon } from "@radix-ui/react-icons";
-import { DayPicker } from "react-day-picker";
+import { DayPicker, type CustomComponents } from "react-day-picker";
 import { cn } from "@/lib/utils";
 
 export type CalendarProps = React.ComponentProps<typeof DayPicker>;
+
+const IconLeft = () => <ChevronLeftIcon className="h-4 w-4 text-white fill-white" />;
+const IconRight = () => <ChevronRightIcon className="h-4 w-4 text-white fill-white" />;
+
+const components: Partial<CustomComponents> = {
+  IconLeft,
+  IconRight,
+};
 
 function Calendar({
   className,
@@ -43,14 +51,7 @@ function Calendar({
         day_hidden: "invisible",
         ...classNames,
       }}
-      components={{
-        PrevButton: () => (
-          <ChevronLeftIcon className="h-4 w-4 text-white fill-white" />
-        ),
-        NextButton: () => (
-          <ChevronRightIcon className="h-4 w-4 text-white fill-white" />
-        ),
-      }}
+      components={components}
       {...props}
     />
   );
