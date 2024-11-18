@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase, type DreamJournal } from '@/lib/supabase';
 import { Calendar } from '@/components/ui/calendar';
 import { format, startOfWeek, endOfWeek } from 'date-fns';
@@ -21,6 +21,13 @@ export default function JournalPage() {
   const [filteredJournals, setFilteredJournals] = useState<DreamJournal[]>([]);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [viewType, setViewType] = useState<ViewType>('recent');
+
+  const getJournalDates = useCallback(() => {
+    return journals.map(journal => {
+      const date = new Date(journal.dream_date);
+      return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+    });
+  }, [journals]);
 
   useEffect(() => {
     fetchJournals();
