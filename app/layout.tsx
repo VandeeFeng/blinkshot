@@ -5,6 +5,8 @@ import PlausibleProvider from "next-plausible";
 import localFont from "next/font/local";
 import "./globals.css";
 import { Toaster } from "@/components/ui/toast";
+import { Suspense } from "react";
+import { Spinner } from "@/components/spinner";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -61,7 +63,13 @@ export default function RootLayout({
         style={{ backgroundImage: `url(${bgPattern.src}` }}
       >
         <Providers>
-          {children}
+          <Suspense fallback={
+            <div className="flex items-center justify-center h-screen">
+              <Spinner className="size-8" />
+            </div>
+          }>
+            {children}
+          </Suspense>
           <Toaster />
         </Providers>
       </body>
