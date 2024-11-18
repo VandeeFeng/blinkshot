@@ -12,7 +12,7 @@ import { ArrowLeft, Trash2 } from 'lucide-react';
 import { toast } from "sonner";
 import { useSearchParams } from 'next/navigation';
 
-export default function JournalPage() {
+export default function JournalContent() {
   const searchParams = useSearchParams();
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [journals, setJournals] = useState<DreamJournal[]>([]);
