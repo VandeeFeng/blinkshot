@@ -197,10 +197,29 @@ export default function JournalPage() {
                 justifyContent: 'center',
                 borderRadius: '0.375rem'
               },
-              selected: {
+              today: {
                 backgroundColor: '#374151',
                 color: '#ffffff',
-                fontWeight: '500'
+                fontWeight: '500',
+                width: '1.7rem',
+                height: '1.7rem',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                borderRadius: '0.375rem',
+                border: '1px solid #4B5563',
+                boxShadow: '0 0 0 1px #4B5563'
+              },
+              selected: {
+                backgroundColor: '#1f2937',
+                color: '#ffffff',
+                fontWeight: '500',
+                width: '1.7rem',
+                height: '1.7rem',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                borderRadius: '0.375rem'
               }
             }}
             className={cn(
@@ -213,8 +232,8 @@ export default function JournalPage() {
               "[&_td]:w-10 [&_td]:text-center",
               "[&_.rdp-day]:h-9 [&_.rdp-day]:w-9",
               "[&_.rdp-day_span]:text-center",
-              "[&_.rdp-day.rdp-day_selected]:bg-gray-700",
-              "[&_.rdp-day.rdp-day_selected]:rounded-md",
+              "[&_.rdp-day.rdp-day_selected]:bg-transparent",
+              "[&_.rdp-day.rdp-day_today]:bg-transparent",
               "[&_.rdp-caption]:mb-4",
               "[&_button>svg]:text-gray-200",
               "[&_button>svg]:opacity-100",
@@ -226,7 +245,9 @@ export default function JournalPage() {
               "[&_.rdp-nav_button]:bg-gray-700/30",
               "[&_.rdp-nav_button]:p-1.5",
               "[&_.rdp-nav_button]:rounded-md",
-              "[&_.rdp-nav_button]:hover:bg-gray-700/50"
+              "[&_.rdp-nav_button]:hover:bg-gray-700/50",
+              "[&_.rdp-day]:transition-all",
+              "[&_.rdp-day]:duration-200"
             )}
           />
         </div>
