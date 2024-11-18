@@ -12,7 +12,7 @@ import { ArrowLeft, Trash2 } from 'lucide-react';
 import { toast } from "sonner";
 import { useSearchParams } from 'next/navigation';
 
-type ViewType = 'week' | 'month' | 'recent';
+type ViewType = 'day' | 'week' | 'month' | 'recent';
 
 export default function JournalPage() {
   const searchParams = useSearchParams();
@@ -37,6 +37,16 @@ export default function JournalPage() {
     if (journals.length > 0) {
       let filtered;
       switch (viewType) {
+        case 'day':
+          filtered = journals.filter(journal => {
+            const journalDate = new Date(journal.dream_date);
+            return (
+              journalDate.getFullYear() === selectedDate.getFullYear() &&
+              journalDate.getMonth() === selectedDate.getMonth() &&
+              journalDate.getDate() === selectedDate.getDate()
+            );
+          });
+          break;
         case 'week':
           const weekStart = startOfWeek(selectedDate);
           const weekEnd = endOfWeek(selectedDate);
@@ -99,12 +109,14 @@ export default function JournalPage() {
   const handleDateSelect = (date: Date | undefined) => {
     if (date) {
       setSelectedDate(date);
-      setViewType('week');
+      setViewType('day');
     }
   };
 
   const getDisplayTitle = () => {
     switch (viewType) {
+      case 'day':
+        return format(selectedDate, 'MMMM d, yyyy');
       case 'week':
         return `Week of ${format(startOfWeek(selectedDate), 'MMM dd')} - ${format(endOfWeek(selectedDate), 'MMM dd, yyyy')}`;
       case 'month':
@@ -164,6 +176,12 @@ export default function JournalPage() {
             </div>
           </div>
           
+          {viewType === 'day' && filteredJournals.length === 0 && (
+            <div className="text-center py-8 text-gray-400 bg-gray-800/50 rounded-lg">
+              No dreams recorded for {format(selectedDate, 'MMMM d, yyyy')}
+            </div>
+          )}
+
           {filteredJournals.map((journal) => (
             <div 
               key={journal.id}
