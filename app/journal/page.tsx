@@ -10,8 +10,10 @@ import { cn } from '@/lib/utils';
 import Link from 'next/link';
 import { ArrowLeft, Trash2 } from 'lucide-react';
 import { toast } from "sonner";
+import { useSearchParams } from 'next/navigation';
 
 export default function JournalPage() {
+  const searchParams = useSearchParams();
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [journals, setJournals] = useState<DreamJournal[]>([]);
   const [filteredJournals, setFilteredJournals] = useState<DreamJournal[]>([]);
@@ -94,7 +96,7 @@ export default function JournalPage() {
     <div className="container max-w-5xl mx-auto p-4">
       <div className="flex flex-col items-center gap-4 mb-8">
         <Link 
-          href={`/${window.location.search}`}
+          href={`/${searchParams.toString()}`}
           className={cn(
             "self-start flex items-center gap-2 text-gray-300 hover:text-blue-400 transition-colors",
             "bg-transparent p-2 rounded-lg",
