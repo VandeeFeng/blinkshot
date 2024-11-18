@@ -9,12 +9,12 @@ import imagePlaceholder from "@/public/image-placeholder.png";
 import { useQuery } from "@tanstack/react-query";
 import { useDebounce } from "@uidotdev/usehooks";
 import Image from "next/image";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import TypewriterEffect from '@/components/TypewriterEffect';
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import { supabase } from "@/lib/supabase";
 import { format } from "date-fns";
 import { toast } from "sonner";
@@ -70,34 +70,31 @@ export default function Home() {
   const [showTitleDialog, setShowTitleDialog] = useState(false);
   const [journalTitle, setJournalTitle] = useState('');
 
-  const optimizePrompt = async (inputPrompt: string) => {
-    if (inputPrompt === lastOptimizedPrompt) {
-      return; // 如果输入没有变化，直接返回，不进行优化
-    }
-    setIsOptimizing(true);
+  const optimizePrompt = useCallback(async (prompt: string) => {
+    setPendingOptimizedPrompt(prompt);
     try {
-      const res = await fetch("/api/optimizePrompt", {
+      const response = await fetch("/api/optimizePrompt", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ prompt: inputPrompt }),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ prompt }),
       });
-
-      if (!res.ok) {
-        throw new Error(await res.text());
+      const data = await response.json();
+      
+      if (data.optimizedPrompt) {
+        setOptimizeSettings(prev => ({
+          ...prev,
+          optimizedPrompt: data.optimizedPrompt
+        }));
+        setLastOptimizedPrompt(prompt);
+        setShouldGenerateImage(true);
       }
-
-      const data = await res.json();
-      setPendingOptimizedPrompt(data.optimizedPrompt);
-      setShowOptimizedPrompt(true);
-      setLastOptimizedPrompt(inputPrompt); // 更新最后优化的输入
     } catch (error) {
-      console.error('Error optimizing prompt:', error);
+      console.error("Error optimizing prompt:", error);
+      toast.error("Failed to optimize prompt");
     } finally {
-      setIsOptimizing(false);
+      setPendingOptimizedPrompt("");
     }
-  };
+  }, []);
 
   const acceptOptimizedPrompt = () => {
     setOptimizeSettings(prev => ({ ...prev, optimizedPrompt: pendingOptimizedPrompt }));

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase, type DreamJournal } from '@/lib/supabase';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
@@ -7,6 +7,7 @@ import { format } from 'date-fns';
 import { Calendar } from './ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
 import { cn } from '@/lib/utils';
+import { CalendarIcon } from "@radix-ui/react-icons";
 
 interface Props {
   onSelectContent: (content: string) => void;
@@ -25,23 +26,27 @@ export default function DreamJournal({
   const [loading, setLoading] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
 
+  const fetchJournals = useCallback(async () => {
+    try {
+      const { data, error } = await supabase
+        .from('dream_journals')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching journals:', error);
+        return;
+      }
+
+      setJournals(data || []);
+    } catch (error) {
+      console.error('Error fetching journals:', error);
+    }
+  }, [setJournals]);
+
   useEffect(() => {
     fetchJournals();
   }, [fetchJournals]);
-
-  async function fetchJournals() {
-    const { data, error } = await supabase
-      .from('dream_journals')
-      .select('*')
-      .order('dream_date', { ascending: false });
-
-    if (error) {
-      console.error('Error fetching journals:', error);
-      return;
-    }
-
-    setJournals(data);
-  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -82,13 +87,6 @@ export default function DreamJournal({
     setDate(new Date());
     fetchJournals();
     setLoading(false);
-  }
-
-  function handleEdit(journal: DreamJournal) {
-    setEditingId(journal.id);
-    setTitle(journal.title);
-    setContent(journal.content);
-    setDate(new Date(journal.dream_date));
   }
 
   function handleJournalSelect(content: string) {
