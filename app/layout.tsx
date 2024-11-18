@@ -6,7 +6,7 @@ import localFont from "next/font/local";
 import "./globals.css";
 import { Toaster } from "@/components/ui/toast";
 import { Suspense } from "react";
-import { Spinner } from "@/components/spinner";
+import Spinner from "@/components/spinner";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
