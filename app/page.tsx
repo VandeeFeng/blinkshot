@@ -71,7 +71,7 @@ export default function Home() {
   const [journalTitle, setJournalTitle] = useState('');
 
   const optimizePrompt = useCallback(async (prompt: string) => {
-    setPendingOptimizedPrompt(prompt);
+    setIsOptimizing(true);
     try {
       const response = await fetch("/api/optimizePrompt", {
         method: "POST",
@@ -81,18 +81,14 @@ export default function Home() {
       const data = await response.json();
       
       if (data.optimizedPrompt) {
-        setOptimizeSettings(prev => ({
-          ...prev,
-          optimizedPrompt: data.optimizedPrompt
-        }));
+        setPendingOptimizedPrompt(data.optimizedPrompt);
         setLastOptimizedPrompt(prompt);
-        setShouldGenerateImage(true);
       }
     } catch (error) {
       console.error("Error optimizing prompt:", error);
       toast.error("Failed to optimize prompt");
     } finally {
-      setPendingOptimizedPrompt("");
+      setIsOptimizing(false);
     }
   }, []);
 
@@ -100,13 +96,14 @@ export default function Home() {
     setOptimizeSettings(prev => ({ ...prev, optimizedPrompt: pendingOptimizedPrompt }));
     setPendingOptimizedPrompt("");
     setShouldGenerateImage(true);
-    // 不需要设置 setShowOptimizedPrompt(false)，因为我们现在总是显示优化后的提示
   };
 
   const rejectOptimizedPrompt = () => {
     setPendingOptimizedPrompt("");
-    setShouldGenerateImage(true);
+    setOptimizeSettings(prev => ({ ...prev, optimizedPrompt: "" }));
     setShowOptimizedPrompt(false);
+    setShouldGenerateImage(false);
+    setShouldStartGenerating(false);
   };
 
   useEffect(() => {
@@ -311,14 +308,24 @@ export default function Home() {
                 onChange={handlePromptChange}
                 className="w-full resize-none border-gray-300 border-opacity-50 bg-gray-400 px-4 text-base placeholder-gray-300"
               />
-              {optimizeSettings.enabled && pendingOptimizedPrompt && showOptimizedPrompt && (
+              {optimizeSettings.enabled && pendingOptimizedPrompt && (
                 <div className="mt-2 text-sm text-gray-300">
                   <p>AI optimized: <TypewriterEffect text={pendingOptimizedPrompt} /></p>
                   <div className="mt-2 flex justify-end space-x-2">
-                    <Button onClick={acceptOptimizedPrompt} variant="secondary" size="sm">
+                    <Button 
+                      onClick={acceptOptimizedPrompt} 
+                      variant="outline"
+                      size="sm"
+                      className="text-gray-300 hover:text-gray-100 border-gray-500/50 hover:bg-gray-700/80 transition-colors"
+                    >
                       Accept
                     </Button>
-                    <Button onClick={rejectOptimizedPrompt} variant="outline" size="sm">
+                    <Button 
+                      onClick={rejectOptimizedPrompt} 
+                      variant="outline"
+                      size="sm"
+                      className="text-gray-300 hover:text-gray-100 border-gray-500/50 hover:bg-gray-700/80 transition-colors"
+                    >
                       Reject
                     </Button>
                   </div>
