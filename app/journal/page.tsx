@@ -8,7 +8,7 @@ import Image from 'next/image';
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
-import { ArrowLeft, ChevronLeft, ChevronRight, Trash2 } from 'lucide-react';
+import { ArrowLeft, Trash2 } from 'lucide-react';
 import { toast } from "sonner";
 
 export default function JournalPage() {

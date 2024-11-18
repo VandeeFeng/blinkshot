@@ -7,20 +7,17 @@ import { format } from 'date-fns';
 import { Calendar } from './ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
 import { cn } from '@/lib/utils';
-import { CalendarIcon, Pencil2Icon, TrashIcon } from '@radix-ui/react-icons';
 
 interface Props {
   onSelectContent: (content: string) => void;
   journals: DreamJournal[];
   setJournals: (journals: DreamJournal[]) => void;
-  onImageGenerated?: (journalId: string, imageBase64: string) => void;
 }
 
 export default function DreamJournal({ 
   onSelectContent, 
   journals, 
-  setJournals,
-  onImageGenerated 
+  setJournals 
 }: Props) {
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
@@ -30,7 +27,7 @@ export default function DreamJournal({
 
   useEffect(() => {
     fetchJournals();
-  }, []);
+  }, [fetchJournals]);
 
   async function fetchJournals() {
     const { data, error } = await supabase
@@ -85,22 +82,6 @@ export default function DreamJournal({
     setDate(new Date());
     fetchJournals();
     setLoading(false);
-  }
-
-  async function handleDelete(id: string) {
-    const confirmed = window.confirm('Are you sure you want to delete this dream journal?');
-    if (!confirmed) return;
-
-    const { error } = await supabase
-      .from('dream_journals')
-      .delete()
-      .eq('id', id);
-
-    if (error) {
-      console.error('Error deleting journal:', error);
-    } else {
-      fetchJournals();
-    }
   }
 
   function handleEdit(journal: DreamJournal) {

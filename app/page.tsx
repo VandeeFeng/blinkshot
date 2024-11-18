@@ -131,7 +131,7 @@ export default function Home() {
       setShouldStartGenerating(false);
       setLastOptimizedPrompt(""); // 重置最后优化的输入
     }
-  }, [debouncedPrompt, optimizeSettings.enabled, pendingOptimizedPrompt, optimizeSettings.optimizedPrompt, lastOptimizedPrompt]);
+  }, [debouncedPrompt, optimizeSettings.enabled, pendingOptimizedPrompt, optimizeSettings.optimizedPrompt, lastOptimizedPrompt, optimizePrompt]);
 
   const currentPrompt = optimizeSettings.enabled && optimizeSettings.optimizedPrompt
     ? optimizeSettings.optimizedPrompt
@@ -201,7 +201,6 @@ export default function Home() {
     }
   };
 
-  const router = useRouter();
   const searchParams = useSearchParams();
 
   useEffect(() => {
