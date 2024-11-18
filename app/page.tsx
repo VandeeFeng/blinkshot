@@ -44,11 +44,13 @@ export default function Home() {
   const [prompt, setPrompt] = useState("");
   const [iterativeMode, setIterativeMode] = useState(false);
   const [userAPIKey, setUserAPIKey] = useState("");
+  const [pendingOptimizedPrompt, setPendingOptimizedPrompt] = useState("");
   const [optimizeSettings, setOptimizeSettings] = useState({
     enabled: false,
     optimizedPrompt: "",
   });
   const [isOptimizing, setIsOptimizing] = useState(false);
+  const [shouldGenerateImage, setShouldGenerateImage] = useState(false);
   const [generations, setGenerations] = useState<
     { prompt: string; image: ImageResponse }[]
   >([]);
@@ -58,10 +60,6 @@ export default function Home() {
   // 将 debounce 时间保持在 1500ms (1.5秒)
   const debouncedPrompt = useDebounce(prompt, 1500);
 
-  const [pendingOptimizedPrompt, setPendingOptimizedPrompt] = useState("");
-  const [shouldGenerateImage, setShouldGenerateImage] = useState(false);
-  const [showOptimizedPrompt, setShowOptimizedPrompt] = useState(false);
-
   // 新增一个状态来追踪是否应该开始生成图片
   const [shouldStartGenerating, setShouldStartGenerating] = useState(false);
 
@@ -69,6 +67,9 @@ export default function Home() {
 
   const [showTitleDialog, setShowTitleDialog] = useState(false);
   const [journalTitle, setJournalTitle] = useState('');
+
+  // 添加一个新的状态来跟踪保存状态
+  const [isSaving, setIsSaving] = useState(false);
 
   const optimizePrompt = useCallback(async (prompt: string) => {
     setIsOptimizing(true);
@@ -101,7 +102,6 @@ export default function Home() {
   const rejectOptimizedPrompt = () => {
     setPendingOptimizedPrompt("");
     setOptimizeSettings(prev => ({ ...prev, optimizedPrompt: "" }));
-    setShowOptimizedPrompt(false);
     setShouldGenerateImage(false);
     setShouldStartGenerating(false);
   };
@@ -120,10 +120,8 @@ export default function Home() {
     } else {
       setOptimizeSettings(prev => ({ ...prev, optimizedPrompt: "" }));
       setPendingOptimizedPrompt("");
-      setShouldGenerateImage(false);
-      setShowOptimizedPrompt(false);
       setShouldStartGenerating(false);
-      setLastOptimizedPrompt(""); // 重置最后优化的输入
+      setLastOptimizedPrompt("");
     }
   }, [debouncedPrompt, optimizeSettings.enabled, pendingOptimizedPrompt, optimizeSettings.optimizedPrompt, lastOptimizedPrompt, optimizePrompt]);
 
@@ -182,14 +180,12 @@ export default function Home() {
     if (!newValue.trim()) {
       setOptimizeSettings(prev => ({ ...prev, optimizedPrompt: "" }));
       setPendingOptimizedPrompt("");
-      setShowOptimizedPrompt(false);
       setShouldGenerateImage(false);
       setShouldStartGenerating(false);
-      setLastOptimizedPrompt(""); // 重置最后优化的输入
+      setLastOptimizedPrompt("");
     } else if (newValue !== prompt) {
       setOptimizeSettings(prev => ({ ...prev, optimizedPrompt: "" }));
       setPendingOptimizedPrompt("");
-      setShowOptimizedPrompt(false);
       setShouldGenerateImage(false);
       setShouldStartGenerating(false);
     }
@@ -228,6 +224,7 @@ export default function Home() {
   };
 
   const handleConfirmSave = async () => {
+    setIsSaving(true); // 开始保存时设置状态
     try {
       const { error } = await supabase
         .from('dream_journals')
@@ -249,6 +246,8 @@ export default function Home() {
     } catch (error) {
       console.error('Error saving to journal:', error);
       toast.error('Failed to save to journal');
+    } finally {
+      setIsSaving(false); // 无论成功还是失败，都重置状态
     }
   };
 
@@ -519,9 +518,21 @@ export default function Home() {
               <Button
                 onClick={handleConfirmSave}
                 variant="outline"
-                className="text-gray-300 hover:text-gray-100 border-gray-500/50 hover:bg-gray-700/80 transition-colors px-5"
+                disabled={isSaving}
+                className={cn(
+                  "text-gray-300 hover:text-gray-100 border-gray-500/50 hover:bg-gray-700/80 transition-colors px-5",
+                  "relative", // 添加相对定位
+                  isSaving && "cursor-not-allowed opacity-70" // 保存时降低透明度
+                )}
               >
-                Save to Journal
+                {isSaving ? (
+                  <>
+                    <Spinner className="size-4 absolute left-3" />
+                    <span className="ml-6">Saving...</span>
+                  </>
+                ) : (
+                  "Save to Journal"
+                )}
               </Button>
             </div>
           </div>
