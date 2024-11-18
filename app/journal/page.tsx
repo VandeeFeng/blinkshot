@@ -189,37 +189,19 @@ export default function JournalPage() {
               hasJournal: {
                 backgroundColor: '#34403a',
                 color: '#ffffff',
-                fontWeight: '500',
-                width: '1.7rem',
-                height: '1.7rem',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                borderRadius: '0.375rem'
+                fontWeight: '500'
               },
               today: {
                 backgroundColor: '#374151',
                 color: '#ffffff',
                 fontWeight: '500',
-                width: '1.7rem',
-                height: '1.7rem',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                borderRadius: '0.375rem',
                 border: '1px solid #4B5563',
                 boxShadow: '0 0 0 1px #4B5563'
               },
               selected: {
                 backgroundColor: '#1f2937',
                 color: '#ffffff',
-                fontWeight: '500',
-                width: '1.7rem',
-                height: '1.7rem',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                borderRadius: '0.375rem'
+                fontWeight: '500'
               }
             }}
             className={cn(
