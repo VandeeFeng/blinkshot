@@ -511,7 +511,8 @@ export default function Home() {
               </Button>
               <Button
                 onClick={handleConfirmSave}
-                className="bg-blue-600 hover:bg-blue-700 text-white transition-colors px-5"
+                variant="outline"
+                className="text-gray-300 hover:text-gray-100 border-gray-500/50 hover:bg-gray-700/80 transition-colors px-5"
               >
                 Save to Journal
               </Button>
