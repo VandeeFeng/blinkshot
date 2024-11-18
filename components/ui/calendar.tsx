@@ -44,24 +44,6 @@ function Calendar({
         day_hidden: "invisible",
         ...classNames,
       }}
-      components={{
-        Navigation: ({ ...props }) => (
-          <div className="space-x-1 flex items-center">
-            <button
-              onClick={() => props.goToMonth(props.previousMonth)}
-              className="h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100"
-            >
-              <ChevronLeftIcon className="h-4 w-4" />
-            </button>
-            <button
-              onClick={() => props.goToMonth(props.nextMonth)}
-              className="h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100"
-            >
-              <ChevronRightIcon className="h-4 w-4" />
-            </button>
-          </div>
-        )
-      }}
       {...props}
     />
   );
