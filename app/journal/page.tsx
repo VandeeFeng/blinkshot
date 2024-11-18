@@ -60,7 +60,7 @@ export default function JournalPage() {
     setJournals(data);
   }
 
-  async function handleDelete(journalId: number) {
+  async function handleDelete(journalId: string) {
     if (!confirm('Are you sure you want to delete this journal entry?')) return;
 
     const { error } = await supabase
