@@ -97,13 +97,13 @@ export default function JournalPage() {
           href={`/${window.location.search}`}
           className={cn(
             "self-start flex items-center gap-2 text-gray-300 hover:text-blue-400 transition-colors",
-            "bg-gray-800/70 p-2 rounded-lg border border-gray-600",
-            "hover:border-blue-500/50 hover:bg-gray-800/80",
+            "bg-transparent p-2 rounded-lg",
+            "hover:bg-gray-800/80",
             "group"
           )}
         >
           <ArrowLeft className="w-5 h-5 transition-transform group-hover:-translate-x-1" />
-          <span>Back to Dream AI</span>
+          <span>Back to Dream Composer</span>
         </Link>
         <h1 className="text-4xl font-bold text-gray-100">Dream Journal</h1>
       </div>

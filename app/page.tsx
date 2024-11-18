@@ -18,6 +18,11 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { supabase } from "@/lib/supabase";
 import { format } from "date-fns";
 import { toast } from "sonner";
+import {
+  Dialog,
+  DialogContent,
+} from "@/components/ui/dialog";
+import { X } from "lucide-react";
 
 export type DreamJournal = {
   id: string;
@@ -61,6 +66,9 @@ export default function Home() {
   const [shouldStartGenerating, setShouldStartGenerating] = useState(false);
 
   const [lastOptimizedPrompt, setLastOptimizedPrompt] = useState("");
+
+  const [showTitleDialog, setShowTitleDialog] = useState(false);
+  const [journalTitle, setJournalTitle] = useState('');
 
   const optimizePrompt = async (inputPrompt: string) => {
     if (inputPrompt === lastOptimizedPrompt) {
@@ -212,16 +220,26 @@ export default function Home() {
   }, [searchParams]);
 
   // 添加一个保存到日志的函数
+  const getDefaultTitle = () => {
+    const now = new Date();
+    return `Dream on ${format(now, 'MMM dd, yyyy HH:mm')}`;
+  };
+
   const handleSaveToJournal = async (e: React.MouseEvent) => {
     e.preventDefault();
     
     if (!activeImage) return;
     
+    setJournalTitle(getDefaultTitle());
+    setShowTitleDialog(true);
+  };
+
+  const handleConfirmSave = async () => {
     try {
       const { error } = await supabase
         .from('dream_journals')
         .insert([{
-          title: `Dream on ${format(new Date(), 'MMM dd, yyyy')}`,
+          title: journalTitle,
           content: prompt,
           dream_date: new Date().toISOString(),
           generated_image_b64: activeImage.b64_json
@@ -234,6 +252,7 @@ export default function Home() {
       }
 
       toast.success('Successfully saved to journal');
+      setShowTitleDialog(false);
     } catch (error) {
       console.error('Error saving to journal:', error);
       toast.error('Failed to save to journal');
@@ -244,7 +263,7 @@ export default function Home() {
     <div className="flex h-full flex-col px-5">
       <header className="flex flex-col items-center pt-20 md:pt-3">
   <h1 className="text-4xl font-bold text-center mb-4">
-    Morpheus Dream Interpreter
+    Morpheus Dream Composer
   </h1>
   <div className="w-full md:w-auto md:self-end">
     <label className="text-xs text-gray-200">
@@ -272,8 +291,8 @@ export default function Home() {
     href="/journal"
     className={cn(
       "flex items-center gap-2 text-gray-300 hover:text-blue-400 transition-colors",
-      "bg-gray-800/70 p-2 rounded-lg border border-gray-600",
-      "hover:border-blue-500/50 hover:bg-gray-800/80",
+      "bg-transparent p-2 rounded-lg",
+      "hover:bg-gray-800/80",
       "group"
     )}
   >
@@ -393,8 +412,8 @@ export default function Home() {
                   onClick={handleSaveToJournal}
                   className={cn(
                     "flex items-center gap-2 text-gray-300 hover:text-blue-400 transition-colors",
-                    "bg-gray-800/70 p-2 rounded-lg border border-gray-600",
-                    "hover:border-blue-500/50 hover:bg-gray-800/80",
+                    "bg-transparent p-2 rounded-lg",
+                    "hover:bg-gray-800/80",
                     "group"
                   )}
                 >
@@ -462,6 +481,48 @@ export default function Home() {
           
         </div>
       </footer>
+
+      <Dialog open={showTitleDialog} onOpenChange={setShowTitleDialog}>
+        <DialogContent className="sm:max-w-[425px] bg-gray-800/60 backdrop-blur-md border border-gray-600/50 shadow-2xl rounded-xl p-6">
+          <div className="space-y-4">
+            <div className="flex justify-between items-center">
+              <label htmlFor="title" className="text-sm font-medium text-gray-200">
+                Dream Title
+              </label>
+              <button 
+                onClick={() => setShowTitleDialog(false)}
+                className="text-gray-400 hover:text-gray-200 transition-colors"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+            
+            <Input
+              id="title"
+              placeholder="Enter a title for your dream..."
+              value={journalTitle}
+              onChange={(e) => setJournalTitle(e.target.value)}
+              className="bg-gray-700/80 text-gray-100 border-gray-500/30 placeholder:text-gray-400 focus-visible:ring-blue-500/50 focus-visible:border-blue-500/50 h-11"
+            />
+
+            <div className="flex justify-end gap-3 pt-4">
+              <Button
+                variant="outline"
+                onClick={() => setShowTitleDialog(false)}
+                className="text-gray-300 hover:text-gray-100 border-gray-500/50 hover:bg-gray-700/80 transition-colors px-5"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleConfirmSave}
+                className="bg-blue-600 hover:bg-blue-700 text-white transition-colors px-5"
+              >
+                Save to Journal
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
