@@ -177,7 +177,7 @@ export default function JournalPage() {
           </div>
           
           {viewType === 'day' && filteredJournals.length === 0 && (
-            <div className="text-center py-8 text-gray-400 bg-gray-800/50 rounded-lg">
+            <div className="text-center py-8 text-white bg-gray-800/50 rounded-lg">
               No dreams recorded for {format(selectedDate, 'MMMM d, yyyy')}
             </div>
           )}
