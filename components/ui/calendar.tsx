@@ -34,7 +34,8 @@ function Calendar({
         cell: "relative p-0 text-center text-sm focus-within:relative focus-within:z-20 w-10",
         day: cn(
           "h-9 w-9 p-0 font-normal aria-selected:opacity-100 rounded-md",
-          "flex items-center justify-center"
+          "flex items-center justify-center",
+          "transform transition-transform duration-200"
         ),
         day_selected: "bg-primary text-primary-foreground",
         day_today: "bg-accent text-accent-foreground",

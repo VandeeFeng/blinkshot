@@ -189,19 +189,22 @@ export default function JournalPage() {
               hasJournal: {
                 backgroundColor: '#34403a',
                 color: '#ffffff',
-                fontWeight: '500'
+                fontWeight: '500',
+                transform: 'scale(0.8)',
               },
               today: {
                 backgroundColor: '#374151',
                 color: '#ffffff',
                 fontWeight: '500',
                 border: '1px solid #4B5563',
-                boxShadow: '0 0 0 1px #4B5563'
+                boxShadow: '0 0 0 1px #4B5563',
+                transform: 'scale(0.8)',
               },
               selected: {
-                backgroundColor: '#1f2937',
+                backgroundColor: '#4B5563',
                 color: '#ffffff',
-                fontWeight: '500'
+                fontWeight: '500',
+                transform: 'scale(0.8)',
               }
             }}
             className={cn(
