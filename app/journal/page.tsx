@@ -12,13 +12,15 @@ import { ArrowLeft, Trash2 } from 'lucide-react';
 import { toast } from "sonner";
 import { useSearchParams } from 'next/navigation';
 
+type ViewType = 'week' | 'month' | 'recent';
+
 export default function JournalPage() {
   const searchParams = useSearchParams();
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [journals, setJournals] = useState<DreamJournal[]>([]);
   const [filteredJournals, setFilteredJournals] = useState<DreamJournal[]>([]);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
-  const [isMonthView, setIsMonthView] = useState(false);
+  const [viewType, setViewType] = useState<ViewType>('recent');
 
   useEffect(() => {
     fetchJournals();
@@ -27,22 +29,32 @@ export default function JournalPage() {
   useEffect(() => {
     if (journals.length > 0) {
       let filtered;
-      if (isMonthView) {
-        filtered = journals.filter(journal => {
-          const journalDate = new Date(journal.dream_date);
-          return (
-            journalDate.getMonth() === selectedDate.getMonth() &&
-            journalDate.getFullYear() === selectedDate.getFullYear()
-          );
-        });
-      } else {
-        filtered = [...journals]
-          .sort((a, b) => new Date(b.dream_date).getTime() - new Date(a.dream_date).getTime())
-          .slice(0, 7);
+      switch (viewType) {
+        case 'week':
+          const weekStart = startOfWeek(selectedDate);
+          const weekEnd = endOfWeek(selectedDate);
+          filtered = journals.filter(journal => {
+            const journalDate = new Date(journal.dream_date);
+            return journalDate >= weekStart && journalDate <= weekEnd;
+          });
+          break;
+        case 'month':
+          filtered = journals.filter(journal => {
+            const journalDate = new Date(journal.dream_date);
+            return (
+              journalDate.getMonth() === selectedDate.getMonth() &&
+              journalDate.getFullYear() === selectedDate.getFullYear()
+            );
+          });
+          break;
+        default: // recent
+          filtered = [...journals]
+            .sort((a, b) => new Date(b.dream_date).getTime() - new Date(a.dream_date).getTime())
+            .slice(0, 7);
       }
       setFilteredJournals(filtered);
     }
-  }, [selectedDate, journals, isMonthView]);
+  }, [selectedDate, journals, viewType]);
 
   async function fetchJournals() {
     const { data, error } = await supabase
@@ -80,15 +92,19 @@ export default function JournalPage() {
   const handleDateSelect = (date: Date | undefined) => {
     if (date) {
       setSelectedDate(date);
-      setIsMonthView(true);
+      setViewType('week');
     }
   };
 
   const getDisplayTitle = () => {
-    if (isMonthView) {
-      return format(selectedDate, 'MMMM yyyy');
+    switch (viewType) {
+      case 'week':
+        return `Week of ${format(startOfWeek(selectedDate), 'MMM dd')} - ${format(endOfWeek(selectedDate), 'MMM dd, yyyy')}`;
+      case 'month':
+        return format(selectedDate, 'MMMM yyyy');
+      default:
+        return 'Recent Dreams';
     }
-    return 'Recent Dreams';
   };
 
   return (
@@ -113,14 +129,32 @@ export default function JournalPage() {
         <div className="space-y-4">
           <div className="flex justify-between items-center mb-3">
             <h2 className="text-xl font-semibold">{getDisplayTitle()}</h2>
-            {isMonthView && (
-              <button
-                onClick={() => setIsMonthView(false)}
-                className="text-sm text-blue-400 hover:text-blue-300 transition-colors"
-              >
-                View Recent Dreams
-              </button>
-            )}
+            <div className="flex gap-3">
+              {viewType !== 'recent' && (
+                <button
+                  onClick={() => setViewType('recent')}
+                  className="text-sm text-blue-400 hover:text-blue-300 transition-colors"
+                >
+                  View Recent
+                </button>
+              )}
+              {viewType !== 'week' && (
+                <button
+                  onClick={() => setViewType('week')}
+                  className="text-sm text-blue-400 hover:text-blue-300 transition-colors"
+                >
+                  View Week
+                </button>
+              )}
+              {viewType !== 'month' && (
+                <button
+                  onClick={() => setViewType('month')}
+                  className="text-sm text-blue-400 hover:text-blue-300 transition-colors"
+                >
+                  View Month
+                </button>
+              )}
+            </div>
           </div>
           
           {filteredJournals.map((journal) => (
