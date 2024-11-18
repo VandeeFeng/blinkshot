@@ -196,6 +196,11 @@ export default function JournalPage() {
                 alignItems: 'center',
                 justifyContent: 'center',
                 borderRadius: '0.375rem'
+              },
+              selected: {
+                backgroundColor: '#374151',
+                color: '#ffffff',
+                fontWeight: '500'
               }
             }}
             className={cn(
@@ -208,7 +213,7 @@ export default function JournalPage() {
               "[&_td]:w-10 [&_td]:text-center",
               "[&_.rdp-day]:h-9 [&_.rdp-day]:w-9",
               "[&_.rdp-day_span]:text-center",
-              "[&_.rdp-day.rdp-day_selected]:bg-blue-600",
+              "[&_.rdp-day.rdp-day_selected]:bg-gray-700",
               "[&_.rdp-day.rdp-day_selected]:rounded-md",
               "[&_.rdp-caption]:mb-4",
               "[&_button>svg]:text-gray-200",
