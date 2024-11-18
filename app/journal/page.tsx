@@ -18,7 +18,7 @@ export default function JournalPage() {
   const [journals, setJournals] = useState<DreamJournal[]>([]);
   const [filteredJournals, setFilteredJournals] = useState<DreamJournal[]>([]);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
-  const [isWeekView, setIsWeekView] = useState(true);
+  const [isMonthView, setIsMonthView] = useState(false);
 
   useEffect(() => {
     fetchJournals();
@@ -27,26 +27,22 @@ export default function JournalPage() {
   useEffect(() => {
     if (journals.length > 0) {
       let filtered;
-      if (isWeekView) {
-        const weekStart = startOfWeek(selectedDate);
-        const weekEnd = endOfWeek(selectedDate);
-        filtered = journals.filter(journal => {
-          const journalDate = new Date(journal.dream_date);
-          return journalDate >= weekStart && journalDate <= weekEnd;
-        });
-      } else {
+      if (isMonthView) {
         filtered = journals.filter(journal => {
           const journalDate = new Date(journal.dream_date);
           return (
-            journalDate.getDate() === selectedDate.getDate() &&
             journalDate.getMonth() === selectedDate.getMonth() &&
             journalDate.getFullYear() === selectedDate.getFullYear()
           );
         });
+      } else {
+        filtered = [...journals]
+          .sort((a, b) => new Date(b.dream_date).getTime() - new Date(a.dream_date).getTime())
+          .slice(0, 7);
       }
       setFilteredJournals(filtered);
     }
-  }, [selectedDate, journals, isWeekView]);
+  }, [selectedDate, journals, isMonthView]);
 
   async function fetchJournals() {
     const { data, error } = await supabase
@@ -84,12 +80,15 @@ export default function JournalPage() {
   const handleDateSelect = (date: Date | undefined) => {
     if (date) {
       setSelectedDate(date);
-      setIsWeekView(false);
+      setIsMonthView(true);
     }
   };
 
-  const getJournalDates = () => {
-    return journals.map(journal => new Date(journal.dream_date));
+  const getDisplayTitle = () => {
+    if (isMonthView) {
+      return format(selectedDate, 'MMMM yyyy');
+    }
+    return 'Recent Dreams';
   };
 
   return (
@@ -112,12 +111,17 @@ export default function JournalPage() {
       
       <div className="grid grid-cols-1 md:grid-cols-[1fr,auto] gap-6">
         <div className="space-y-4">
-          <h2 className="text-xl font-semibold mb-3">
-            {isWeekView 
-              ? `Week of ${format(startOfWeek(selectedDate), 'MMM dd')} - ${format(endOfWeek(selectedDate), 'MMM dd, yyyy')}`
-              : format(selectedDate, 'MMM dd, yyyy')
-            }
-          </h2>
+          <div className="flex justify-between items-center mb-3">
+            <h2 className="text-xl font-semibold">{getDisplayTitle()}</h2>
+            {isMonthView && (
+              <button
+                onClick={() => setIsMonthView(false)}
+                className="text-sm text-blue-400 hover:text-blue-300 transition-colors"
+              >
+                View Recent Dreams
+              </button>
+            )}
+          </div>
           
           {filteredJournals.map((journal) => (
             <div 
