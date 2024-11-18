@@ -224,7 +224,12 @@ export default function Home() {
   };
 
   const handleConfirmSave = async () => {
-    setIsSaving(true); // 开始保存时设置状态
+    if (!activeImage?.b64_json) {
+      toast.error('No image to save');
+      return;
+    }
+
+    setIsSaving(true);
     try {
       const { error } = await supabase
         .from('dream_journals')
@@ -247,7 +252,7 @@ export default function Home() {
       console.error('Error saving to journal:', error);
       toast.error('Failed to save to journal');
     } finally {
-      setIsSaving(false); // 无论成功还是失败，都重置状态
+      setIsSaving(false);
     }
   };
 
