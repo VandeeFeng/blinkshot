@@ -45,8 +45,10 @@ function Calendar({
         day_hidden: "invisible",
         day_range_start: "rounded-l-md",
         day_range_end: "rounded-r-md",
-        day_hasJournal: "bg-green-600/20 text-green-300 hover:bg-green-600/30",
         ...classNames,
+      }}
+      modifiersClassNames={{
+        hasJournal: "bg-green-600/20 text-green-300 hover:bg-green-600/30 font-medium"
       }}
       {...props}
     />

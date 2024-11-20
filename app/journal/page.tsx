@@ -23,19 +23,21 @@ export default function JournalPage() {
   const [viewType, setViewType] = useState<ViewType>('recent');
   const [journalDates, setJournalDates] = useState<Date[]>([]);
 
-  const fetchDates = useCallback(async () => {
-    try {
-      const dates = await fetchJournalDates();
-      setJournalDates(dates.map(dateStr => new Date(dateStr)));
-    } catch (error) {
-      console.error('Error fetching journal dates:', error);
-      toast.error('Failed to fetch journal dates');
-    }
-  }, []);
+  const updateJournalDates = useCallback(() => {
+    const dates = journals.map(journal => {
+      const date = new Date(journal.dream_date);
+      return new Date(
+        date.getFullYear(),
+        date.getMonth(),
+        date.getDate()
+      );
+    });
+    setJournalDates(dates);
+  }, [journals]);
 
   useEffect(() => {
-    fetchDates();
-  }, [fetchDates, journals]);
+    updateJournalDates();
+  }, [updateJournalDates]);
 
   useEffect(() => {
     fetchJournals();
