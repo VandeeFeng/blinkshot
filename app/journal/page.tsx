@@ -23,13 +23,6 @@ export default function JournalPage() {
   const [viewType, setViewType] = useState<ViewType>('recent');
   const [journalDates, setJournalDates] = useState<Date[]>([]);
 
-  const getJournalDates = useCallback(() => {
-    return journals.map(journal => {
-      const date = new Date(journal.dream_date);
-      return new Date(date.getFullYear(), date.getMonth(), date.getDate());
-    });
-  }, [journals]);
-
   const fetchDates = useCallback(async () => {
     try {
       const dates = await fetchJournalDates();
