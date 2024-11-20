@@ -267,9 +267,9 @@ export default function JournalPage() {
               "[&_.rdp-day.rdp-day_selected]:bg-transparent",
               "[&_.rdp-day.rdp-day_today]:bg-transparent",
               "[&_.rdp-day.rdp-day_selected]:after:content-[''] [&_.rdp-day.rdp-day_selected]:after:absolute [&_.rdp-day.rdp-day_selected]:after:inset-[20%] [&_.rdp-day.rdp-day_selected]:after:bg-[#4B5563] [&_.rdp-day.rdp-day_selected]:after:rounded-md [&_.rdp-day.rdp-day_selected]:after:-z-10",
-              "[&_.rdp-day.rdp-day_today]:after:content-[''] [&_.rdp-day.rdp-day_today]:after:absolute [&_.rdp-day.rdp-day_today]:after:inset-[20%] [&_.rdp-day.rdp-day_today]:after:bg-[#374151] [&_.rdp-day.rdp-day_today]:after:rounded-md [&_.rdp-day.rdp-day_today]:after:-z-10 [&_.rdp-day.rdp-day_today]:after:border [&_.rdp-day.rdp-day_today]:after:border-[#4B5563] [&_.rdp-day.rdp-day_today]:after:shadow-[0_0_0_1px_#4B5563]",
+              "[&_.rdp-day.rdp-day_today]:after:content-[''] [&_.rdp-day.rdp-day_today]:after:absolute [&_.rdp-day.rdp-day_today]:after:inset-[20%] [&_.rdp-day.rdp-day_today]:after:bg-[#6B7280] [&_.rdp-day.rdp-day_today]:after:rounded-md [&_.rdp-day.rdp-day_today]:after:-z-10 [&_.rdp-day.rdp-day_today]:after:border [&_.rdp-day.rdp-day_today]:after:border-[#4B5563]",
               "[&_.rdp-day.rdp-day_hasJournal]:after:content-[''] [&_.rdp-day.rdp-day_hasJournal]:after:absolute [&_.rdp-day.rdp-day_hasJournal]:after:inset-[20%] [&_.rdp-day.rdp-day_hasJournal]:after:bg-[#34403a] [&_.rdp-day.rdp-day_hasJournal]:after:rounded-md [&_.rdp-day.rdp-day_hasJournal]:after:-z-10",
-              "[&_.rdp-day]:relative [&_.rdp-day]:transition-transform [&_.rdp-day]:duration-200",
+              "[&_.rdp-day]:relative [&_.rdp-day]:transition-transform [&_.rdp-day]:duration-200 [&_.rdp-day]:hover:scale-110",
               "[&_.rdp-day_selected]:scale-110 [&_.rdp-day_today]:scale-110 [&_.rdp-day_hasJournal]:scale-110"
             )}
           />
