@@ -54,15 +54,17 @@ export async function fetchJournalDates() {
     }
     
     // 转换日期格式并去重
-    return Array.from(new Set(data.map(journal => {
+    const uniqueDates = Array.from(new Set(data.map(journal => {
       const date = new Date(journal.dream_date);
-      // 返回不带时间的日期字符串
       return new Date(
         date.getFullYear(),
         date.getMonth(),
         date.getDate()
       ).toISOString().split('T')[0];
-    }))];
+    })));
+
+    return uniqueDates;
+    
   } catch (error) {
     console.error('Error in fetchJournalDates:', error);
     return [];
