@@ -262,12 +262,10 @@ export default function JournalPage() {
               "[&_tbody]:block",
               "[&_tbody_tr]:flex [&_tbody_tr]:justify-between",
               "[&_td]:w-10 [&_td]:text-center",
-              "[&_.rdp-day]:h-9 [&_.rdp-day]:w-9",
+              "[&_.rdp-day]:h-9 [&_.rdp-day]:w-9 [&_.rdp-day]:rounded-md",
               "[&_.rdp-day_span]:text-center",
-              "[&_.rdp-day_selected]:after:content-[''] [&_.rdp-day_selected]:after:absolute [&_.rdp-day_selected]:after:inset-[20%] [&_.rdp-day_selected]:after:bg-[#4B5563] [&_.rdp-day_selected]:after:rounded-md [&_.rdp-day_selected]:after:-z-10",
-              "[&_.rdp-day_today]:after:content-[''] [&_.rdp-day_today]:after:absolute [&_.rdp-day_today]:after:inset-[20%] [&_.rdp-day_today]:after:bg-[#6B7280] [&_.rdp-day_today]:after:rounded-md [&_.rdp-day_today]:after:-z-10 [&_.rdp-day_today]:after:border [&_.rdp-day_today]:after:border-[#4B5563]",
-              "[&_.rdp-day_hasJournal]:after:content-[''] [&_.rdp-day_hasJournal]:after:absolute [&_.rdp-day_hasJournal]:after:inset-[20%] [&_.rdp-day_hasJournal]:after:bg-[#34403a] [&_.rdp-day_hasJournal]:after:rounded-md [&_.rdp-day_hasJournal]:after:-z-10",
-              "[&_.rdp-day]:relative [&_.rdp-day]:transition-transform [&_.rdp-day]:duration-200",
+              "[&_.rdp-day]:relative [&_.rdp-day]:transition-all [&_.rdp-day]:duration-200",
+              "[&_.rdp-day]:hover:scale-110",
               "[&_.rdp-day_selected]:scale-110 [&_.rdp-day_today]:scale-110 [&_.rdp-day_hasJournal]:scale-110"
             )}
           />

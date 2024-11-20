@@ -33,16 +33,18 @@ function Calendar({
         row: "flex w-full mt-2",
         cell: "relative p-0 text-center text-sm focus-within:relative focus-within:z-20 w-10",
         day: cn(
-          "h-9 w-9 p-0 font-normal aria-selected:opacity-100",
+          "h-9 w-9 p-0 font-normal aria-selected:opacity-100 rounded-md",
           "flex items-center justify-center",
           "relative transition-all duration-200",
           "hover:scale-110"
         ),
-        day_selected: "bg-transparent",
-        day_today: "bg-transparent",
+        day_selected: "bg-[#4B5563]",
+        day_today: "bg-[#6B7280]",
         day_outside: "text-muted-foreground opacity-50",
         day_disabled: "text-muted-foreground opacity-50",
         day_hidden: "invisible",
+        day_range_start: "rounded-l-md",
+        day_range_end: "rounded-r-md",
         ...classNames,
       }}
       {...props}
