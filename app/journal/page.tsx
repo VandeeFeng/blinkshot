@@ -113,6 +113,11 @@ export default function JournalPage() {
     }
   };
 
+  const handleMonthChange = (month: Date) => {
+    setSelectedDate(month);
+    setViewType('month');
+  };
+
   const getDisplayTitle = () => {
     switch (viewType) {
       case 'day':
@@ -245,6 +250,7 @@ export default function JournalPage() {
             mode="single"
             selected={selectedDate}
             onSelect={handleDateSelect}
+            onMonthChange={handleMonthChange}
             modifiers={{
               hasJournal: getJournalDates()
             }}
