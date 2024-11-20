@@ -40,3 +40,31 @@ export type DreamJournal = {
   created_at: string;
   updated_at: string;
 };
+
+// 获取所有日记日期
+export async function fetchJournalDates() {
+  try {
+    const { data, error } = await supabase
+      .from('dream_journals')
+      .select('dream_date');
+    
+    if (error) {
+      console.error('Error fetching journal dates:', error);
+      return [];
+    }
+    
+    // 转换日期格式并去重
+    return Array.from(new Set(data.map(journal => {
+      const date = new Date(journal.dream_date);
+      // 返回不带时间的日期字符串
+      return new Date(
+        date.getFullYear(),
+        date.getMonth(),
+        date.getDate()
+      ).toISOString().split('T')[0];
+    }))];
+  } catch (error) {
+    console.error('Error in fetchJournalDates:', error);
+    return [];
+  }
+}

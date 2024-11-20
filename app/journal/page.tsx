@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from 'react';
-import { supabase, type DreamJournal } from '@/lib/supabase';
+import { supabase, type DreamJournal, fetchJournalDates } from '@/lib/supabase';
 import { Calendar } from '@/components/ui/calendar';
 import { format, startOfWeek, endOfWeek } from 'date-fns';
 import Image from 'next/image';
@@ -21,6 +21,7 @@ export default function JournalPage() {
   const [filteredJournals, setFilteredJournals] = useState<DreamJournal[]>([]);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [viewType, setViewType] = useState<ViewType>('recent');
+  const [journalDates, setJournalDates] = useState<Date[]>([]);
 
   const getJournalDates = useCallback(() => {
     return journals.map(journal => {
@@ -28,6 +29,20 @@ export default function JournalPage() {
       return new Date(date.getFullYear(), date.getMonth(), date.getDate());
     });
   }, [journals]);
+
+  const fetchDates = useCallback(async () => {
+    try {
+      const dates = await fetchJournalDates();
+      setJournalDates(dates.map(dateStr => new Date(dateStr)));
+    } catch (error) {
+      console.error('Error fetching journal dates:', error);
+      toast.error('Failed to fetch journal dates');
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchDates();
+  }, [fetchDates, journals]);
 
   useEffect(() => {
     fetchJournals();
@@ -252,7 +267,7 @@ export default function JournalPage() {
             onSelect={handleDateSelect}
             onMonthChange={handleMonthChange}
             modifiers={{
-              hasJournal: getJournalDates()
+              hasJournal: journalDates
             }}
             className={cn(
               "text-gray-200",
