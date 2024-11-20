@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from 'react';
-import { supabase, type DreamJournal, fetchJournalDates } from '@/lib/supabase';
+import { supabase, type DreamJournal } from '@/lib/supabase';
 import { Calendar } from '@/components/ui/calendar';
 import { format, startOfWeek, endOfWeek } from 'date-fns';
 import Image from 'next/image';
