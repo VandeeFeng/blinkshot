@@ -14,6 +14,7 @@ import { useSearchParams } from 'next/navigation';
 
 type ViewType = 'day' | 'week' | 'month' | 'recent';
 
+
 export default function JournalPage() {
   const searchParams = useSearchParams();
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
