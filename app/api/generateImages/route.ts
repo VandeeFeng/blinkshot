@@ -2,7 +2,7 @@ import Together from "together-ai";
 import { z } from "zod";
 import { Ratelimit } from "@upstash/ratelimit";
 import { Redis } from "@upstash/redis";
-import { headers } from "next/headers";
+import { getIPAddress } from "@/app/utils/ip";
 
 let ratelimit: Ratelimit | undefined;
 
@@ -83,14 +83,3 @@ export async function POST(req: Request) {
 }
 
 export const runtime = "edge";
-
-function getIPAddress() {
-  const FALLBACK_IP_ADDRESS = "0.0.0.0";
-  const forwardedFor = headers().get("x-forwarded-for");
-
-  if (forwardedFor) {
-    return forwardedFor.split(",")[0] ?? FALLBACK_IP_ADDRESS;
-  }
-
-  return headers().get("x-real-ip") ?? FALLBACK_IP_ADDRESS;
-}

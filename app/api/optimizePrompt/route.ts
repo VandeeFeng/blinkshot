@@ -1,7 +1,7 @@
 import OpenAI from "openai";
 import { Ratelimit } from "@upstash/ratelimit";
 import { Redis } from "@upstash/redis";
-import { headers } from "next/headers";
+import { getIPAddress } from "@/app/utils/ip";
 
 const openai = new OpenAI({
   baseURL: "https://openrouter.ai/api/v1",
@@ -26,13 +26,20 @@ export async function POST(req: Request) {
 
   // Check rate limit
   if (ratelimit) {
-    const ip = headers().get("x-forwarded-for") ?? "127.0.0.1";
-    const { success, limit, remaining, reset } = await ratelimit.limit(ip);
+    const identifier = getIPAddress();
+    const { success, limit, remaining, reset } = await ratelimit.limit(identifier);
 
     if (!success) {
       return Response.json(
         { error: "Rate limit exceeded" },
-        { status: 429, headers: { "X-RateLimit-Limit": limit.toString(), "X-RateLimit-Remaining": remaining.toString(), "X-RateLimit-Reset": reset.toString() } }
+        { 
+          status: 429, 
+          headers: { 
+            "X-RateLimit-Limit": limit.toString(), 
+            "X-RateLimit-Remaining": remaining.toString(), 
+            "X-RateLimit-Reset": reset.toString() 
+          } 
+        }
       );
     }
   }
