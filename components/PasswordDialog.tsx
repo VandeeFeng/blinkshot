@@ -1,3 +1,5 @@
+"use client";
+
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -33,7 +35,7 @@ export default function PasswordDialog({ onCorrectPassword }: PasswordDialogProp
 
   return (
     <Dialog open={true}>
-      <DialogContent className="sm:max-w-[425px] bg-gray-800/40 backdrop-blur-sm border border-gray-600/30 shadow-2xl rounded-xl p-6">
+      <DialogContent className="sm:max-w-[425px] bg-gray-800/40 backdrop-blur-sm border border-gray-600/30 shadow-2xl rounded-xl p-6 z-50">
         <div className="space-y-4">
           <div className="text-center space-y-2">
             <h2 className="text-xl font-semibold text-gray-100">Enter Password</h2>
