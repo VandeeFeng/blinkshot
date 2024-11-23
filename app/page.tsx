@@ -23,6 +23,7 @@ import {
   DialogContent,
 } from "@/components/ui/dialog";
 import { X } from "lucide-react";
+import PasswordDialog from "@/components/PasswordDialog";
 
 export type DreamJournal = {
   id: string;
@@ -70,6 +71,30 @@ export default function Home() {
 
   // 添加一个新的状态来跟踪保存状态
   const [isSaving, setIsSaving] = useState(false);
+
+  const [isAuthenticated, setIsAuthenticated] = useState(() => {
+    // 在客户端检查 localStorage
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem("isAuthenticated") === "true";
+    }
+    return false;
+  });
+
+  useEffect(() => {
+    // 添加事件监听器来检测 localStorage 变化
+    const handleStorageChange = () => {
+      setIsAuthenticated(localStorage.getItem("isAuthenticated") === "true");
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    
+    // 初始检查
+    setIsAuthenticated(localStorage.getItem("isAuthenticated") === "true");
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+    };
+  }, []);
 
   const optimizePrompt = useCallback(async (prompt: string) => {
     setIsOptimizing(true);
@@ -255,6 +280,10 @@ export default function Home() {
       setIsSaving(false);
     }
   };
+
+  if (!isAuthenticated) {
+    return <PasswordDialog onCorrectPassword={() => setIsAuthenticated(true)} />;
+  }
 
   return (
     <div className="flex h-full flex-col px-5">
