@@ -36,14 +36,14 @@ export default function SignUpForm() {
 
       if (data?.user) {
         setSuccess(true)
-        // 不要立即重定向，让用户看到成功消息
         setTimeout(() => {
           router.push('/login?message=请检查您的邮箱以完成注册')
         }, 5000)
       }
-    } catch (error: Error | { message: string }) {
+    } catch (error: unknown) {
       console.error('注册错误:', error)
-      setError(error.message || '注册过程中发生错误')
+      const errorMessage = error instanceof Error ? error.message : '注册过程中发生错误'
+      setError(errorMessage)
     } finally {
       setLoading(false)
     }
