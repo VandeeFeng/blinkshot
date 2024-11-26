@@ -31,7 +31,7 @@ export default function LoginForm() {
       toast.success('Successfully logged in!')
       router.push('/')
       router.refresh()
-    } catch (error: any) {
+    } catch (error: Error | { message: string }) {
       toast.error(error.message || 'Failed to login')
     } finally {
       setLoading(false)

@@ -82,7 +82,7 @@ export default function Home() {
       setUser(user);
     };
     getUser();
-  }, []);
+  }, [supabase.auth]);
 
   const optimizePrompt = useCallback(async (prompt: string) => {
     setIsOptimizing(true);

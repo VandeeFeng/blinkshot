@@ -41,7 +41,7 @@ export default function SignUpForm() {
           router.push('/login?message=请检查您的邮箱以完成注册')
         }, 5000)
       }
-    } catch (error: any) {
+    } catch (error: Error | { message: string }) {
       console.error('注册错误:', error)
       setError(error.message || '注册过程中发生错误')
     } finally {

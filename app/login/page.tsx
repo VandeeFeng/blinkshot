@@ -35,7 +35,7 @@ export default function LoginPage() {
           <LoginForm />
 
           <div className="text-center text-sm">
-            <span className="text-gray-300">Don't have an account? </span>
+            <span className="text-gray-300">Don&apos;t have an account? </span>
             <Link 
               href="/signup" 
               className="text-blue-400 hover:text-blue-300 transition-colors"

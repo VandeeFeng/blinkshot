@@ -21,6 +21,7 @@ export type DreamJournal = {
   content: string;
   image_path: string;
   user_id: string;
+  dream_date: string;
 };
 
 export default function JournalPage() {
@@ -121,20 +122,6 @@ export default function JournalPage() {
     }
   }, [selectedDate, journals, viewType]);
 
-  async function fetchJournals() {
-    const { data, error } = await supabase
-      .from('dream_journals')
-      .select('*')
-      .order('dream_date', { ascending: false });
-
-    if (error) {
-      console.error('Error fetching journals:', error);
-      return;
-    }
-
-    setJournals(data);
-  }
-
   async function handleDelete(journalId: string) {
     if (!confirm('Are you sure you want to delete this journal entry?')) return;
 
@@ -177,23 +164,6 @@ export default function JournalPage() {
       default:
         return 'Recent Dreams';
     }
-  };
-
-  // 获取图片URL的函数
-  const getImageUrl = async (imagePath: string) => {
-    if (!imagePath) return '';
-    
-    const { data: { publicUrl }, error } = await supabase
-      .storage
-      .from('dream-images')
-      .getPublicUrl(imagePath);
-
-    if (error) {
-      console.error('Error getting image URL:', error);
-      return '';
-    }
-
-    return publicUrl;
   };
 
   return (
