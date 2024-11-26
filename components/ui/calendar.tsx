@@ -1,7 +1,6 @@
 "use client";
 
 import * as React from "react";
-import { ChevronLeftIcon, ChevronRightIcon } from "@radix-ui/react-icons";
 import { DayPicker } from "react-day-picker";
 import { cn } from "@/lib/utils";
 
@@ -24,32 +23,32 @@ function Calendar({
         caption_label: "text-sm font-medium",
         nav: "space-x-1 flex items-center",
         nav_button: cn(
-          "h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100",
-          "text-white hover:text-white"
+          "h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100"
         ),
         nav_button_previous: "absolute left-1",
         nav_button_next: "absolute right-1",
         table: "w-full border-collapse space-y-1",
-        head_row: "flex justify-between",
-        head_cell: "w-9 font-normal text-[0.8rem] text-center",
-        row: "flex w-full justify-between mt-2",
-        cell: "relative p-0 text-center text-sm focus-within:relative focus-within:z-20 [&:has([aria-selected])]:bg-accent",
-        day: "h-9 w-9 p-0 font-normal aria-selected:opacity-100 hover:bg-accent rounded-md",
-        day_selected: "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground",
-        day_today: "bg-accent text-accent-foreground",
+        head_row: "flex",
+        head_cell: "text-muted-foreground rounded-md w-10 font-normal text-[0.8rem]",
+        row: "flex w-full mt-2",
+        cell: "relative p-0 text-center text-sm focus-within:relative focus-within:z-20 w-10",
+        day: cn(
+          "h-9 w-9 p-0 font-normal aria-selected:opacity-100 rounded-md",
+          "flex items-center justify-center",
+          "relative transition-all duration-200",
+          "hover:scale-110"
+        ),
+        day_selected: "bg-[#4B5563]",
+        day_today: "bg-[#6B7280]",
         day_outside: "text-muted-foreground opacity-50",
         day_disabled: "text-muted-foreground opacity-50",
-        day_range_middle: "aria-selected:bg-accent aria-selected:text-accent-foreground",
         day_hidden: "invisible",
+        day_range_start: "rounded-l-md",
+        day_range_end: "rounded-r-md",
         ...classNames,
       }}
-      components={{
-        IconLeft: () => (
-          <ChevronLeftIcon className="h-4 w-4 text-white fill-white" />
-        ),
-        IconRight: () => (
-          <ChevronRightIcon className="h-4 w-4 text-white fill-white" />
-        ),
+      modifiersClassNames={{
+        hasJournal: "bg-green-600/20 text-green-300 hover:bg-green-600/30 font-medium"
       }}
       {...props}
     />
@@ -57,4 +56,4 @@ function Calendar({
 }
 Calendar.displayName = "Calendar";
 
-export { Calendar }; 
+export { Calendar };

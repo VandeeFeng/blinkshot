@@ -1,7 +1,6 @@
 "use client";
 
-import { useState, useEffect } from 'react';
-import { supabase, type DreamJournal } from '@/lib/supabase';
+import { useState, useEffect, useCallback } from 'react';
 import { Calendar } from '@/components/ui/calendar';
 import { format, startOfWeek, endOfWeek } from 'date-fns';
 import Image from 'next/image';
@@ -10,41 +9,117 @@ import { cn } from '@/lib/utils';
 import Link from 'next/link';
 import { ArrowLeft, Trash2 } from 'lucide-react';
 import { toast } from "sonner";
+import { useSearchParams } from 'next/navigation';
+import { createClientComponentClient, User } from '@supabase/auth-helpers-nextjs';
+
+type ViewType = 'day' | 'week' | 'month' | 'recent';
+
+export type DreamJournal = {
+  id: string;
+  created_at: string;
+  title: string;
+  content: string;
+  image_path: string;
+  user_id: string;
+};
 
 export default function JournalPage() {
+  const searchParams = useSearchParams();
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [journals, setJournals] = useState<DreamJournal[]>([]);
   const [filteredJournals, setFilteredJournals] = useState<DreamJournal[]>([]);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
-  const [isWeekView, setIsWeekView] = useState(true);
+  const [viewType, setViewType] = useState<ViewType>('recent');
+  const [journalDates, setJournalDates] = useState<Date[]>([]);
+  const [user, setUser] = useState<User | null>(null);
+  const supabase = createClientComponentClient();
+
+  const updateJournalDates = useCallback(() => {
+    const dates = journals.map(journal => {
+      const date = new Date(journal.dream_date);
+      return new Date(
+        date.getFullYear(),
+        date.getMonth(),
+        date.getDate()
+      );
+    });
+    setJournalDates(dates);
+  }, [journals]);
 
   useEffect(() => {
-    fetchJournals();
-  }, []);
+    updateJournalDates();
+  }, [updateJournalDates]);
+
+  useEffect(() => {
+    // 首先获取当前用户
+    const getCurrentUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      setUser(user);
+    };
+    getCurrentUser();
+  }, [supabase]);
+
+  useEffect(() => {
+    // 只有在有用户的情况下才获取日志
+    if (user) {
+      const fetchJournals = async () => {
+        const { data, error } = await supabase
+          .from('dream_journals')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false });
+
+        if (error) {
+          console.error('Error fetching journals:', error);
+          return;
+        }
+
+        setJournals(data || []);
+      };
+
+      fetchJournals();
+    }
+  }, [user, supabase]);
 
   useEffect(() => {
     if (journals.length > 0) {
       let filtered;
-      if (isWeekView) {
-        const weekStart = startOfWeek(selectedDate);
-        const weekEnd = endOfWeek(selectedDate);
-        filtered = journals.filter(journal => {
-          const journalDate = new Date(journal.dream_date);
-          return journalDate >= weekStart && journalDate <= weekEnd;
-        });
-      } else {
-        filtered = journals.filter(journal => {
-          const journalDate = new Date(journal.dream_date);
-          return (
-            journalDate.getDate() === selectedDate.getDate() &&
-            journalDate.getMonth() === selectedDate.getMonth() &&
-            journalDate.getFullYear() === selectedDate.getFullYear()
-          );
-        });
+      switch (viewType) {
+        case 'day':
+          filtered = journals.filter(journal => {
+            const journalDate = new Date(journal.dream_date);
+            return (
+              journalDate.getFullYear() === selectedDate.getFullYear() &&
+              journalDate.getMonth() === selectedDate.getMonth() &&
+              journalDate.getDate() === selectedDate.getDate()
+            );
+          });
+          break;
+        case 'week':
+          const weekStart = startOfWeek(selectedDate);
+          const weekEnd = endOfWeek(selectedDate);
+          filtered = journals.filter(journal => {
+            const journalDate = new Date(journal.dream_date);
+            return journalDate >= weekStart && journalDate <= weekEnd;
+          });
+          break;
+        case 'month':
+          filtered = journals.filter(journal => {
+            const journalDate = new Date(journal.dream_date);
+            return (
+              journalDate.getMonth() === selectedDate.getMonth() &&
+              journalDate.getFullYear() === selectedDate.getFullYear()
+            );
+          });
+          break;
+        default: // recent
+          filtered = [...journals]
+            .sort((a, b) => new Date(b.dream_date).getTime() - new Date(a.dream_date).getTime())
+            .slice(0, 7);
       }
       setFilteredJournals(filtered);
     }
-  }, [selectedDate, journals, isWeekView]);
+  }, [selectedDate, journals, viewType]);
 
   async function fetchJournals() {
     const { data, error } = await supabase
@@ -60,7 +135,7 @@ export default function JournalPage() {
     setJournals(data);
   }
 
-  async function handleDelete(journalId: number) {
+  async function handleDelete(journalId: string) {
     if (!confirm('Are you sure you want to delete this journal entry?')) return;
 
     const { error } = await supabase
@@ -82,19 +157,50 @@ export default function JournalPage() {
   const handleDateSelect = (date: Date | undefined) => {
     if (date) {
       setSelectedDate(date);
-      setIsWeekView(false);
+      setViewType('day');
     }
   };
 
-  const getJournalDates = () => {
-    return journals.map(journal => new Date(journal.dream_date));
+  const handleMonthChange = (month: Date) => {
+    setSelectedDate(month);
+    setViewType('month');
+  };
+
+  const getDisplayTitle = () => {
+    switch (viewType) {
+      case 'day':
+        return format(selectedDate, 'MMMM d, yyyy');
+      case 'week':
+        return `Week of ${format(startOfWeek(selectedDate), 'MMM dd')} - ${format(endOfWeek(selectedDate), 'MMM dd, yyyy')}`;
+      case 'month':
+        return format(selectedDate, 'MMMM yyyy');
+      default:
+        return 'Recent Dreams';
+    }
+  };
+
+  // 获取图片URL的函数
+  const getImageUrl = async (imagePath: string) => {
+    if (!imagePath) return '';
+    
+    const { data: { publicUrl }, error } = await supabase
+      .storage
+      .from('dream-images')
+      .getPublicUrl(imagePath);
+
+    if (error) {
+      console.error('Error getting image URL:', error);
+      return '';
+    }
+
+    return publicUrl;
   };
 
   return (
     <div className="container max-w-5xl mx-auto p-4">
       <div className="flex flex-col items-center gap-4 mb-8">
         <Link 
-          href={`/${window.location.search}`}
+          href={`/${searchParams.toString()}`}
           className={cn(
             "self-start flex items-center gap-2 text-gray-300 hover:text-blue-400 transition-colors",
             "bg-transparent p-2 rounded-lg",
@@ -110,13 +216,42 @@ export default function JournalPage() {
       
       <div className="grid grid-cols-1 md:grid-cols-[1fr,auto] gap-6">
         <div className="space-y-4">
-          <h2 className="text-xl font-semibold mb-3">
-            {isWeekView 
-              ? `Week of ${format(startOfWeek(selectedDate), 'MMM dd')} - ${format(endOfWeek(selectedDate), 'MMM dd, yyyy')}`
-              : format(selectedDate, 'MMM dd, yyyy')
-            }
-          </h2>
+          <div className="flex justify-between items-center mb-3">
+            <h2 className="text-xl font-semibold">{getDisplayTitle()}</h2>
+            <div className="flex gap-3">
+              {viewType !== 'recent' && (
+                <button
+                  onClick={() => setViewType('recent')}
+                  className="text-sm text-blue-400 hover:text-blue-300 transition-colors"
+                >
+                  View Recent
+                </button>
+              )}
+              {viewType !== 'week' && (
+                <button
+                  onClick={() => setViewType('week')}
+                  className="text-sm text-blue-400 hover:text-blue-300 transition-colors"
+                >
+                  View Week
+                </button>
+              )}
+              {viewType !== 'month' && (
+                <button
+                  onClick={() => setViewType('month')}
+                  className="text-sm text-blue-400 hover:text-blue-300 transition-colors"
+                >
+                  View Month
+                </button>
+              )}
+            </div>
+          </div>
           
+          {viewType === 'day' && filteredJournals.length === 0 && (
+            <div className="text-center py-8 text-white bg-gray-800/50 rounded-lg">
+              No dreams recorded for {format(selectedDate, 'MMMM d, yyyy')}
+            </div>
+          )}
+
           {filteredJournals.map((journal) => (
             <div 
               key={journal.id}
@@ -180,21 +315,9 @@ export default function JournalPage() {
             mode="single"
             selected={selectedDate}
             onSelect={handleDateSelect}
+            onMonthChange={handleMonthChange}
             modifiers={{
-              hasJournal: getJournalDates()
-            }}
-            modifiersStyles={{
-              hasJournal: {
-                backgroundColor: '#34403a',
-                color: '#ffffff',
-                fontWeight: '500',
-                width: '1.7rem',
-                height: '1.7rem',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                borderRadius: '0.375rem'
-              }
+              hasJournal: journalDates
             }}
             className={cn(
               "text-gray-200",
@@ -204,22 +327,11 @@ export default function JournalPage() {
               "[&_tbody]:block",
               "[&_tbody_tr]:flex [&_tbody_tr]:justify-between",
               "[&_td]:w-10 [&_td]:text-center",
-              "[&_.rdp-day]:h-9 [&_.rdp-day]:w-9",
+              "[&_.rdp-day]:h-9 [&_.rdp-day]:w-9 [&_.rdp-day]:rounded-md",
               "[&_.rdp-day_span]:text-center",
-              "[&_.rdp-day.rdp-day_selected]:bg-blue-600",
-              "[&_.rdp-day.rdp-day_selected]:rounded-md",
-              "[&_.rdp-caption]:mb-4",
-              "[&_button>svg]:text-gray-200",
-              "[&_button>svg]:opacity-100",
-              "[&_button>svg]:w-5",
-              "[&_button>svg]:h-5",
-              "[&_button]:hover:bg-gray-700/50",
-              "[&_button]:transition-colors",
-              "[&_button]:border-0",
-              "[&_.rdp-nav_button]:bg-gray-700/30",
-              "[&_.rdp-nav_button]:p-1.5",
-              "[&_.rdp-nav_button]:rounded-md",
-              "[&_.rdp-nav_button]:hover:bg-gray-700/50"
+              "[&_.rdp-day]:relative [&_.rdp-day]:transition-all [&_.rdp-day]:duration-200",
+              "[&_.rdp-day]:hover:scale-110",
+              "[&_.rdp-day_selected]:scale-110 [&_.rdp-day_today]:scale-110 [&_.rdp-day_hasJournal]:scale-110"
             )}
           />
         </div>

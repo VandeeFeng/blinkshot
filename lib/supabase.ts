@@ -1,15 +1,26 @@
 import { createClient } from '@supabase/supabase-js';
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+export type DreamJournal = {
+  id: number;
+  user_id: string;
+  title: string;
+  content: string;
+  dream_date: string;
+  generated_image_b64?: string;
+  created_at: string;
+  updated_at: string;
+};
 
-if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error('Missing Supabase environment variables');
-}
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+export const supabase = createClient(supabaseUrl, supabaseKey);
 
-// 添加一个测试连接的函数
+export const createSupabaseClient = () => {
+  return createClientComponentClient();
+};
+
 export async function testSupabaseConnection() {
   try {
     const { data, error } = await supabase
@@ -29,14 +40,3 @@ export async function testSupabaseConnection() {
     return false;
   }
 }
-
-export type DreamJournal = {
-  id: string;
-  user_id: string;
-  title: string;
-  content: string;
-  dream_date: string;
-  generated_image_b64?: string;
-  created_at: string;
-  updated_at: string;
-};

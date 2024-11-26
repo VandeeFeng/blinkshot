@@ -1,18 +1,35 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { NextRequest, NextResponse } from "next/server";
+import { createMiddlewareClient } from '@supabase/auth-helpers-nextjs'
+import { NextResponse } from 'next/server'
+import type { NextRequest } from 'next/server'
 
-export async function middleware(req: NextRequest) {
-  let country = req.geo?.country;
-  // Temporarily blocking traffic from Russia since I have too many requests from there.
-  if (country === "RU") {
-    return new NextResponse("Access Denied", { status: 403 });
+export async function middleware(request: NextRequest) {
+  try {
+    const res = NextResponse.next()
+    const supabase = createMiddlewareClient({ req: request, res })
+
+    // 刷新 session
+    const {
+      data: { session },
+    } = await supabase.auth.getSession()
+
+    // 检查是否访问需要认证的路由
+    if (request.nextUrl.pathname.startsWith('/journal')) {
+      if (!session) {
+        // 保存用户想要访问的 URL
+        const redirectUrl = new URL('/login', request.url)
+        redirectUrl.searchParams.set('next', request.nextUrl.pathname)
+        return NextResponse.redirect(redirectUrl)
+      }
+    }
+
+    return res
+  } catch (error) {
+    console.error('Middleware error:', error)
+    return NextResponse.redirect(new URL('/login', request.url))
   }
-
-  // Allow the request to proceed
-  return NextResponse.next();
 }
 
-// Optionally, specify paths to apply the middleware
 export const config = {
-  matcher: "/:path*", // Apply to all routes
-};
+  matcher: ['/journal/:path*']
+}

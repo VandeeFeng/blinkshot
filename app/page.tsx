@@ -15,7 +15,6 @@ import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useSearchParams } from 'next/navigation';
-import { supabase } from "@/lib/supabase";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import {
@@ -23,6 +22,8 @@ import {
   DialogContent,
 } from "@/components/ui/dialog";
 import { X } from "lucide-react";
+import Navbar from "@/components/Navbar";
+import { createClientComponentClient, User } from '@supabase/auth-helpers-nextjs';
 
 export type DreamJournal = {
   id: string;
@@ -44,11 +45,13 @@ export default function Home() {
   const [prompt, setPrompt] = useState("");
   const [iterativeMode, setIterativeMode] = useState(false);
   const [userAPIKey, setUserAPIKey] = useState("");
+  const [pendingOptimizedPrompt, setPendingOptimizedPrompt] = useState("");
   const [optimizeSettings, setOptimizeSettings] = useState({
     enabled: false,
     optimizedPrompt: "",
   });
   const [isOptimizing, setIsOptimizing] = useState(false);
+  const [shouldGenerateImage, setShouldGenerateImage] = useState(false);
   const [generations, setGenerations] = useState<
     { prompt: string; image: ImageResponse }[]
   >([]);
@@ -58,10 +61,6 @@ export default function Home() {
   // 将 debounce 时间保持在 1500ms (1.5秒)
   const debouncedPrompt = useDebounce(prompt, 1500);
 
-  const [pendingOptimizedPrompt, setPendingOptimizedPrompt] = useState("");
-  const [shouldGenerateImage, setShouldGenerateImage] = useState(false);
-  const [showOptimizedPrompt, setShowOptimizedPrompt] = useState(false);
-
   // 新增一个状态来追踪是否应该开始生成图片
   const [shouldStartGenerating, setShouldStartGenerating] = useState(false);
 
@@ -70,8 +69,23 @@ export default function Home() {
   const [showTitleDialog, setShowTitleDialog] = useState(false);
   const [journalTitle, setJournalTitle] = useState('');
 
+  // 添加一个新的状态来跟踪保存状态
+  const [isSaving, setIsSaving] = useState(false);
+
+  // 添加获取用户会话的逻辑
+  const [user, setUser] = useState<User | null>(null);
+  const supabase = createClientComponentClient();
+
+  useEffect(() => {
+    const getUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      setUser(user);
+    };
+    getUser();
+  }, []);
+
   const optimizePrompt = useCallback(async (prompt: string) => {
-    setPendingOptimizedPrompt(prompt);
+    setIsOptimizing(true);
     try {
       const response = await fetch("/api/optimizePrompt", {
         method: "POST",
@@ -81,18 +95,14 @@ export default function Home() {
       const data = await response.json();
       
       if (data.optimizedPrompt) {
-        setOptimizeSettings(prev => ({
-          ...prev,
-          optimizedPrompt: data.optimizedPrompt
-        }));
+        setPendingOptimizedPrompt(data.optimizedPrompt);
         setLastOptimizedPrompt(prompt);
-        setShouldGenerateImage(true);
       }
     } catch (error) {
       console.error("Error optimizing prompt:", error);
       toast.error("Failed to optimize prompt");
     } finally {
-      setPendingOptimizedPrompt("");
+      setIsOptimizing(false);
     }
   }, []);
 
@@ -100,13 +110,13 @@ export default function Home() {
     setOptimizeSettings(prev => ({ ...prev, optimizedPrompt: pendingOptimizedPrompt }));
     setPendingOptimizedPrompt("");
     setShouldGenerateImage(true);
-    // 不需要设置 setShowOptimizedPrompt(false)，因为我们现在总是显示优化后的提示
   };
 
   const rejectOptimizedPrompt = () => {
     setPendingOptimizedPrompt("");
-    setShouldGenerateImage(true);
-    setShowOptimizedPrompt(false);
+    setOptimizeSettings(prev => ({ ...prev, optimizedPrompt: "" }));
+    setShouldGenerateImage(false);
+    setShouldStartGenerating(false);
   };
 
   useEffect(() => {
@@ -123,10 +133,8 @@ export default function Home() {
     } else {
       setOptimizeSettings(prev => ({ ...prev, optimizedPrompt: "" }));
       setPendingOptimizedPrompt("");
-      setShouldGenerateImage(false);
-      setShowOptimizedPrompt(false);
       setShouldStartGenerating(false);
-      setLastOptimizedPrompt(""); // 重置最后优化的输入
+      setLastOptimizedPrompt("");
     }
   }, [debouncedPrompt, optimizeSettings.enabled, pendingOptimizedPrompt, optimizeSettings.optimizedPrompt, lastOptimizedPrompt, optimizePrompt]);
 
@@ -185,14 +193,12 @@ export default function Home() {
     if (!newValue.trim()) {
       setOptimizeSettings(prev => ({ ...prev, optimizedPrompt: "" }));
       setPendingOptimizedPrompt("");
-      setShowOptimizedPrompt(false);
       setShouldGenerateImage(false);
       setShouldStartGenerating(false);
-      setLastOptimizedPrompt(""); // 重置最后优化的输入
+      setLastOptimizedPrompt("");
     } else if (newValue !== prompt) {
       setOptimizeSettings(prev => ({ ...prev, optimizedPrompt: "" }));
       setPendingOptimizedPrompt("");
-      setShowOptimizedPrompt(false);
       setShouldGenerateImage(false);
       setShouldStartGenerating(false);
     }
@@ -231,10 +237,22 @@ export default function Home() {
   };
 
   const handleConfirmSave = async () => {
+    if (!activeImage?.b64_json) {
+      toast.error('No image to save');
+      return;
+    }
+
+    if (!user) {
+      toast.error('Please login to save dreams');
+      return;
+    }
+
+    setIsSaving(true);
     try {
       const { error } = await supabase
         .from('dream_journals')
         .insert([{
+          user_id: user.id,
           title: journalTitle,
           content: prompt,
           dream_date: new Date().toISOString(),
@@ -252,12 +270,16 @@ export default function Home() {
     } catch (error) {
       console.error('Error saving to journal:', error);
       toast.error('Failed to save to journal');
+    } finally {
+      setIsSaving(false);
     }
   };
 
   return (
-    <div className="flex h-full flex-col px-5">
-      <header className="flex flex-col items-center pt-20 md:pt-3">
+    <>
+      <Navbar />
+      <div className="flex h-full flex-col px-5">
+        <header className="flex flex-col items-center pt-20 md:pt-3">
   <h1 className="text-4xl font-bold text-center mb-4">
     Morpheus Dream Composer
   </h1>
@@ -311,14 +333,24 @@ export default function Home() {
                 onChange={handlePromptChange}
                 className="w-full resize-none border-gray-300 border-opacity-50 bg-gray-400 px-4 text-base placeholder-gray-300"
               />
-              {optimizeSettings.enabled && pendingOptimizedPrompt && showOptimizedPrompt && (
+              {optimizeSettings.enabled && pendingOptimizedPrompt && (
                 <div className="mt-2 text-sm text-gray-300">
                   <p>AI optimized: <TypewriterEffect text={pendingOptimizedPrompt} /></p>
                   <div className="mt-2 flex justify-end space-x-2">
-                    <Button onClick={acceptOptimizedPrompt} variant="secondary" size="sm">
+                    <Button 
+                      onClick={acceptOptimizedPrompt} 
+                      variant="outline"
+                      size="sm"
+                      className="text-gray-300 hover:text-gray-100 border-gray-500/50 hover:bg-gray-700/80 transition-colors"
+                    >
                       Accept
                     </Button>
-                    <Button onClick={rejectOptimizedPrompt} variant="outline" size="sm">
+                    <Button 
+                      onClick={rejectOptimizedPrompt} 
+                      variant="outline"
+                      size="sm"
+                      className="text-gray-300 hover:text-gray-100 border-gray-500/50 hover:bg-gray-700/80 transition-colors"
+                    >
                       Reject
                     </Button>
                   </div>
@@ -511,14 +543,28 @@ export default function Home() {
               </Button>
               <Button
                 onClick={handleConfirmSave}
-                className="bg-blue-600 hover:bg-blue-700 text-white transition-colors px-5"
+                variant="outline"
+                disabled={isSaving}
+                className={cn(
+                  "text-gray-300 hover:text-gray-100 border-gray-500/50 hover:bg-gray-700/80 transition-colors px-5",
+                  "relative", // 添加相对定位
+                  isSaving && "cursor-not-allowed opacity-70" // 保存时降低透明度
+                )}
               >
-                Save to Journal
+                {isSaving ? (
+                  <>
+                    <Spinner className="size-4 absolute left-3" />
+                    <span className="ml-6">Saving...</span>
+                  </>
+                ) : (
+                  "Save to Journal"
+                )}
               </Button>
             </div>
           </div>
         </DialogContent>
       </Dialog>
     </div>
+  </>
   );
 }
