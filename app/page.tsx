@@ -1,5 +1,6 @@
 "use client";
 
+import { Suspense } from 'react';
 import Spinner from "@/components/spinner";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
@@ -41,7 +42,7 @@ type ImageResponse = {
   timings: { inference: number };
 };
 
-export default function Home() {
+function HomeContent() {
   const [prompt, setPrompt] = useState("");
   const [iterativeMode, setIterativeMode] = useState(false);
   const [userAPIKey, setUserAPIKey] = useState("");
@@ -566,5 +567,20 @@ export default function Home() {
       </Dialog>
     </div>
   </>
+  );
+}
+
+export default function Home() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-4xl font-bold mb-4">Loading...</h1>
+          <p className="text-gray-400">Please wait while we prepare your dream space...</p>
+        </div>
+      </div>
+    }>
+      <HomeContent />
+    </Suspense>
   );
 }
