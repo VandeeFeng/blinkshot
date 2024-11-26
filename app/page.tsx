@@ -281,292 +281,290 @@ function HomeContent() {
       <Navbar />
       <div className="flex h-full flex-col px-5">
         <header className="flex flex-col items-center pt-20 md:pt-3">
-  <h1 className="text-4xl font-bold text-center mb-4">
-    Morpheus Dream Composer
-  </h1>
-  <div className="w-full md:w-auto md:self-end">
-    <label className="text-xs text-gray-200">
-      [Optional] Add your{" "}
-      <a
-        href="https://api.together.xyz/settings/api-keys"
-        target="_blank"
-        className="underline underline-offset-4 transition hover:text-blue-500"
-      >
-        Together API Key
-      </a>{" "}
-    </label>
-    <Input
-      placeholder="API Key"
-      type="password"
-      value={userAPIKey}
-      className="mt-1 bg-gray-400 text-gray-200 placeholder:text-gray-300"
-      onChange={(e) => setUserAPIKey(e.target.value)}
-    />
-  </div>
-</header>
+          <div className="mb-16"></div>
+          <div className="w-full md:w-auto md:self-end">
+            <label className="text-xs text-gray-200">
+              [Optional] Add your{" "}
+              <a
+                href="https://api.together.xyz/settings/api-keys"
+                target="_blank"
+                className="underline underline-offset-4 transition hover:text-blue-500"
+              >
+                Together API Key
+              </a>{" "}
+            </label>
+            <Input
+              placeholder="API Key"
+              type="password"
+              value={userAPIKey}
+              className="mt-1 bg-gray-400 text-gray-200 placeholder:text-gray-300"
+              onChange={(e) => setUserAPIKey(e.target.value)}
+            />
+          </div>
+        </header>
 
-<div className="flex justify-center mt-4">
-  <Link 
-    href="/journal"
-    className={cn(
-      "flex items-center gap-2 text-gray-300 hover:text-blue-400 transition-colors",
-      "bg-transparent p-2 rounded-lg",
-      "hover:bg-gray-800/80",
-      "group"
-    )}
-  >
-    <span>Dream Journal</span>
-    <ArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
-  </Link>
-</div>
+        <div className="flex justify-center mt-4">
+          <Link 
+            href="/journal"
+            className={cn(
+              "flex items-center gap-2 text-gray-300 hover:text-blue-400 transition-colors",
+              "bg-transparent p-2 rounded-lg",
+              "hover:bg-gray-800/80",
+              "group"
+            )}
+          >
+            <span>Dream Journal</span>
+            <ArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
+          </Link>
+        </div>
 
-      <div className="flex justify-center">
-        <form className="mt-10 w-full max-w-lg">
-          <fieldset>
-            <div className="relative">
-              <Textarea
-                ref={textareaRef}
-                rows={4}
-                spellCheck={false}
-                placeholder="Describe your dream..."
-                required
-                value={prompt}
-                onChange={handlePromptChange}
-                className="w-full resize-none border-gray-300 border-opacity-50 bg-gray-400 px-4 text-base placeholder-gray-300"
-              />
-              {optimizeSettings.enabled && pendingOptimizedPrompt && (
-                <div className="mt-2 text-sm text-gray-300">
-                  <p>AI optimized: <TypewriterEffect text={pendingOptimizedPrompt} /></p>
-                  <div className="mt-2 flex justify-end space-x-2">
-                    <Button 
-                      onClick={acceptOptimizedPrompt} 
-                      variant="outline"
-                      size="sm"
-                      className="text-gray-300 hover:text-gray-100 border-gray-500/50 hover:bg-gray-700/80 transition-colors"
-                    >
-                      Accept
-                    </Button>
-                    <Button 
-                      onClick={rejectOptimizedPrompt} 
-                      variant="outline"
-                      size="sm"
-                      className="text-gray-300 hover:text-gray-100 border-gray-500/50 hover:bg-gray-700/80 transition-colors"
-                    >
-                      Reject
-                    </Button>
+        <div className="flex justify-center">
+          <form className="mt-10 w-full max-w-lg">
+            <fieldset>
+              <div className="relative">
+                <Textarea
+                  ref={textareaRef}
+                  rows={4}
+                  spellCheck={false}
+                  placeholder="Describe your dream..."
+                  required
+                  value={prompt}
+                  onChange={handlePromptChange}
+                  className="w-full resize-none border-gray-300 border-opacity-50 bg-gray-400 px-4 text-base placeholder-gray-300"
+                />
+                {optimizeSettings.enabled && pendingOptimizedPrompt && (
+                  <div className="mt-2 text-sm text-gray-300">
+                    <p>AI optimized: <TypewriterEffect text={pendingOptimizedPrompt} /></p>
+                    <div className="mt-2 flex justify-end space-x-2">
+                      <Button 
+                        onClick={acceptOptimizedPrompt} 
+                        variant="outline"
+                        size="sm"
+                        className="text-gray-300 hover:text-gray-100 border-gray-500/50 hover:bg-gray-700/80 transition-colors"
+                      >
+                        Accept
+                      </Button>
+                      <Button 
+                        onClick={rejectOptimizedPrompt} 
+                        variant="outline"
+                        size="sm"
+                        className="text-gray-300 hover:text-gray-100 border-gray-500/50 hover:bg-gray-700/80 transition-colors"
+                      >
+                        Reject
+                      </Button>
+                    </div>
                   </div>
-                </div>
-              )}
-              {optimizeSettings.enabled && optimizeSettings.optimizedPrompt && (
-                <div className="mt-2 text-sm text-gray-300">
-                  Using AI optimized: <TypewriterEffect text={optimizeSettings.optimizedPrompt} />
-                </div>
-              )}
-              <div
-                className={`${isFetching || isOptimizing ? "flex" : "hidden"} absolute bottom-3 right-3 items-center justify-center`}
-              >
-                <Spinner className="size-4" />
-              </div>
-            </div>
-
-            <div className="mt-3 text-sm md:text-right">
-              <label
-                title="Use earlier images as references"
-                className="inline-flex items-center gap-2"
-              >
-                Consistency mode
-                <Switch
-                  checked={iterativeMode}
-                  onCheckedChange={setIterativeMode}
-                />
-              </label>
-              <label
-                className="inline-flex items-center gap-2 ml-4"
-                title="Optimize prompt using AI"
-              >
-                AI mode
-                <Switch
-                  id="optimize-mode"
-                  checked={optimizeSettings.enabled}
-                  onCheckedChange={(checked) => {
-                    setOptimizeSettings(prev => ({ ...prev, enabled: checked, optimizedPrompt: "" }));
-                    if (checked) {
-                      // 不立即触发优化，让 useEffect 处理
-                      setShouldGenerateImage(false);
-                      setShouldStartGenerating(false);
-                    } else {
-                      // 如果关闭 AI 模式，立即允许生成图片
-                      setShouldGenerateImage(true);
-                      setShouldStartGenerating(true);
-                    }
-                  }}
-                />
-              </label>
-            </div>
-          </fieldset>
-        </form>
-      </div>
-
-      <div className="flex w-full grow flex-col items-center justify-center pb-8 pt-4 text-center">
-        {!activeImage || !prompt ? (
-          <div className="max-w-xl md:max-w-4xl lg:max-w-3xl">
-            <p className="text-xl font-semibold text-gray-200 md:text-3xl lg:text-4xl">
-              Dream is the bridge between consciousness and the unconscious. 
-            </p>
-            <p className="mt-4 text-balance text-sm text-gray-300 md:text-base lg:text-lg">
-              Enter a prompt to quickly generate images that reveal your hidden dreams.
-              <br/>
-              Use AI mode to automatically enhance your prompts for more vivid results.
-            </p>
-          </div>
-        ) : (
-          <div className="mt-4 flex w-full max-w-4xl flex-col justify-center">
-            <div>
-              <Image
-                placeholder="blur"
-                blurDataURL={imagePlaceholder.blurDataURL}
-                width={1024}
-                height={768}
-                src={`data:image/png;base64,${activeImage.b64_json}`}
-                alt=""
-                className={`${isFetching ? "animate-pulse" : ""} max-w-full rounded-lg object-cover shadow-sm shadow-black`}
-              />
-              
-              <div className="mt-4 p-3 bg-gray-800/70 border border-gray-600 rounded-lg flex items-center justify-between">
-                <p className="text-gray-200">
-                  Want to save this dream visualization to your journal?
-                </p>
-                <Link 
-                  href="/journal"
-                  onClick={handleSaveToJournal}
-                  className={cn(
-                    "flex items-center gap-2 text-gray-300 hover:text-blue-400 transition-colors",
-                    "bg-transparent p-2 rounded-lg",
-                    "hover:bg-gray-800/80",
-                    "group"
-                  )}
+                )}
+                {optimizeSettings.enabled && optimizeSettings.optimizedPrompt && (
+                  <div className="mt-2 text-sm text-gray-300">
+                    Using AI optimized: <TypewriterEffect text={optimizeSettings.optimizedPrompt} />
+                  </div>
+                )}
+                <div
+                  className={`${isFetching || isOptimizing ? "flex" : "hidden"} absolute bottom-3 right-3 items-center justify-center`}
                 >
-                  <span>Save to Journal</span>
-                  <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
-                </Link>
+                  <Spinner className="size-4" />
+                </div>
               </div>
-            </div>
 
-            <div className="mt-4 flex gap-4 overflow-x-scroll pb-4">
-              {generations.map((generatedImage, i) => (
-                <button
-                  key={i}
-                  className="w-32 shrink-0 opacity-50 hover:opacity-100"
-                  onClick={() => setActiveIndex(i)}
+              <div className="mt-3 text-sm md:text-right">
+                <label
+                  title="Use earlier images as references"
+                  className="inline-flex items-center gap-2"
                 >
-                  <Image
-                    placeholder="blur"
-                    blurDataURL={imagePlaceholder.blurDataURL}
-                    width={1024}
-                    height={768}
-                    src={`data:image/png;base64,${generatedImage.image.b64_json}`}
-                    alt=""
-                    className="max-w-full rounded-lg object-cover shadow-sm shadow-black"
+                  Consistency mode
+                  <Switch
+                    checked={iterativeMode}
+                    onCheckedChange={setIterativeMode}
                   />
-                </button>
-              ))}
+                </label>
+                <label
+                  className="inline-flex items-center gap-2 ml-4"
+                  title="Optimize prompt using AI"
+                >
+                  AI mode
+                  <Switch
+                    id="optimize-mode"
+                    checked={optimizeSettings.enabled}
+                    onCheckedChange={(checked) => {
+                      setOptimizeSettings(prev => ({ ...prev, enabled: checked, optimizedPrompt: "" }));
+                      if (checked) {
+                        // 不立即触发优化，让 useEffect 处理
+                        setShouldGenerateImage(false);
+                        setShouldStartGenerating(false);
+                      } else {
+                        // 如果关闭 AI 模式，立即允许生成图片
+                        setShouldGenerateImage(true);
+                        setShouldStartGenerating(true);
+                      }
+                    }}
+                  />
+                </label>
+              </div>
+            </fieldset>
+          </form>
+        </div>
+
+        <div className="flex w-full grow flex-col items-center justify-center pb-8 pt-4 text-center">
+          {!activeImage || !prompt ? (
+            <div className="max-w-xl md:max-w-4xl lg:max-w-3xl">
+              <p className="text-xl font-semibold text-gray-200 md:text-3xl lg:text-4xl">
+                Dream is the bridge between consciousness and the unconscious. 
+              </p>
+              <p className="mt-4 text-balance text-sm text-gray-300 md:text-base lg:text-lg">
+                Enter a prompt to quickly generate images that reveal your hidden dreams.
+                <br/>
+                Use AI mode to automatically enhance your prompts for more vivid results.
+              </p>
             </div>
-          </div>
-        )}
-      </div>
+          ) : (
+            <div className="mt-4 flex w-full max-w-4xl flex-col justify-center">
+              <div>
+                <Image
+                  placeholder="blur"
+                  blurDataURL={imagePlaceholder.blurDataURL}
+                  width={1024}
+                  height={768}
+                  src={`data:image/png;base64,${activeImage.b64_json}`}
+                  alt=""
+                  className={`${isFetching ? "animate-pulse" : ""} max-w-full rounded-lg object-cover shadow-sm shadow-black`}
+                />
+                
+                <div className="mt-4 p-3 bg-gray-800/70 border border-gray-600 rounded-lg flex items-center justify-between">
+                  <p className="text-gray-200">
+                    Want to save this dream visualization to your journal?
+                  </p>
+                  <Link 
+                    href="/journal"
+                    onClick={handleSaveToJournal}
+                    className={cn(
+                      "flex items-center gap-2 text-gray-300 hover:text-blue-400 transition-colors",
+                      "bg-transparent p-2 rounded-lg",
+                      "hover:bg-gray-800/80",
+                      "group"
+                    )}
+                  >
+                    <span>Save to Journal</span>
+                    <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+                  </Link>
+                </div>
+              </div>
 
-      <footer className="mt-16 w-full items-center pb-10 text-center text-gray-300 md:mt-4 md:flex md:justify-between md:pb-5 md:text-xs lg:text-sm">
-        <p>
-          Powered by{" "}
-          <a
-            href="https://www.dub.sh/together-ai"
-            target="_blank"
-            className="underline underline-offset-4 transition hover:text-blue-500"
-          >
-            Together.ai
-          </a>{" "}
-          &{" "}
-          <a
-            href="https://dub.sh/together-flux"
-            target="_blank"
-            className="underline underline-offset-4 transition hover:text-blue-500"
-          >
-            Flux
-          </a>
-        </p>
+              <div className="mt-4 flex gap-4 overflow-x-scroll pb-4">
+                {generations.map((generatedImage, i) => (
+                  <button
+                    key={i}
+                    className="w-32 shrink-0 opacity-50 hover:opacity-100"
+                    onClick={() => setActiveIndex(i)}
+                  >
+                    <Image
+                      placeholder="blur"
+                      blurDataURL={imagePlaceholder.blurDataURL}
+                      width={1024}
+                      height={768}
+                      src={`data:image/png;base64,${generatedImage.image.b64_json}`}
+                      alt=""
+                      className="max-w-full rounded-lg object-cover shadow-sm shadow-black"
+                    />
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
 
-        <div className="mt-8 flex items-center justify-center md:mt-0 md:justify-between md:gap-6">
-          <p className="hidden whitespace-nowrap md:block">
-            100% free and{" "}
+        <footer className="mt-16 w-full items-center pb-10 text-center text-gray-300 md:mt-4 md:flex md:justify-between md:pb-5 md:text-xs lg:text-sm">
+          <p>
+            Powered by{" "}
             <a
-              href="https://github.com/Nutlope/blinkshot"
+              href="https://www.dub.sh/together-ai"
               target="_blank"
               className="underline underline-offset-4 transition hover:text-blue-500"
             >
-              open source
+              Together.ai
+            </a>{" "}
+            &{" "}
+            <a
+              href="https://dub.sh/together-flux"
+              target="_blank"
+              className="underline underline-offset-4 transition hover:text-blue-500"
+            >
+              Flux
             </a>
           </p>
 
-          
-        </div>
-      </footer>
-
-      <Dialog open={showTitleDialog} onOpenChange={setShowTitleDialog}>
-        <DialogContent className="sm:max-w-[425px] bg-gray-800/60 backdrop-blur-md border border-gray-600/50 shadow-2xl rounded-xl p-6">
-          <div className="space-y-4">
-            <div className="flex justify-between items-center">
-              <label htmlFor="title" className="text-sm font-medium text-gray-200">
-                Dream Title
-              </label>
-              <button 
-                onClick={() => setShowTitleDialog(false)}
-                className="text-gray-400 hover:text-gray-200 transition-colors"
+          <div className="mt-8 flex items-center justify-center md:mt-0 md:justify-between md:gap-6">
+            <p className="hidden whitespace-nowrap md:block">
+              100% free and{" "}
+              <a
+                href="https://github.com/Nutlope/blinkshot"
+                target="_blank"
+                className="underline underline-offset-4 transition hover:text-blue-500"
               >
-                <X className="h-4 w-4" />
-              </button>
-            </div>
+                open source
+              </a>
+            </p>
+
             
-            <Input
-              id="title"
-              placeholder="Enter a title for your dream..."
-              value={journalTitle}
-              onChange={(e) => setJournalTitle(e.target.value)}
-              className="bg-gray-700/80 text-gray-100 border-gray-500/30 placeholder:text-gray-400 focus-visible:ring-blue-500/50 focus-visible:border-blue-500/50 h-11"
-            />
-
-            <div className="flex justify-end gap-3 pt-4">
-              <Button
-                variant="outline"
-                onClick={() => setShowTitleDialog(false)}
-                className="text-gray-300 hover:text-gray-100 border-gray-500/50 hover:bg-gray-700/80 transition-colors px-5"
-              >
-                Cancel
-              </Button>
-              <Button
-                onClick={handleConfirmSave}
-                variant="outline"
-                disabled={isSaving}
-                className={cn(
-                  "text-gray-300 hover:text-gray-100 border-gray-500/50 hover:bg-gray-700/80 transition-colors px-5",
-                  "relative", // 添加相对定位
-                  isSaving && "cursor-not-allowed opacity-70" // 保存时降低透明度
-                )}
-              >
-                {isSaving ? (
-                  <>
-                    <Spinner className="size-4 absolute left-3" />
-                    <span className="ml-6">Saving...</span>
-                  </>
-                ) : (
-                  "Save to Journal"
-                )}
-              </Button>
-            </div>
           </div>
-        </DialogContent>
-      </Dialog>
-    </div>
-  </>
+        </footer>
+
+        <Dialog open={showTitleDialog} onOpenChange={setShowTitleDialog}>
+          <DialogContent className="sm:max-w-[425px] bg-gray-800/60 backdrop-blur-md border border-gray-600/50 shadow-2xl rounded-xl p-6">
+            <div className="space-y-4">
+              <div className="flex justify-between items-center">
+                <label htmlFor="title" className="text-sm font-medium text-gray-200">
+                  Dream Title
+                </label>
+                <button 
+                  onClick={() => setShowTitleDialog(false)}
+                  className="text-gray-400 hover:text-gray-200 transition-colors"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+              
+              <Input
+                id="title"
+                placeholder="Enter a title for your dream..."
+                value={journalTitle}
+                onChange={(e) => setJournalTitle(e.target.value)}
+                className="bg-gray-700/80 text-gray-100 border-gray-500/30 placeholder:text-gray-400 focus-visible:ring-blue-500/50 focus-visible:border-blue-500/50 h-11"
+              />
+
+              <div className="flex justify-end gap-3 pt-4">
+                <Button
+                  variant="outline"
+                  onClick={() => setShowTitleDialog(false)}
+                  className="text-gray-300 hover:text-gray-100 border-gray-500/50 hover:bg-gray-700/80 transition-colors px-5"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleConfirmSave}
+                  variant="outline"
+                  disabled={isSaving}
+                  className={cn(
+                    "text-gray-300 hover:text-gray-100 border-gray-500/50 hover:bg-gray-700/80 transition-colors px-5",
+                    "relative", // 添加相对定位
+                    isSaving && "cursor-not-allowed opacity-70" // 保存时降低透明度
+                  )}
+                >
+                  {isSaving ? (
+                    <>
+                      <Spinner className="size-4 absolute left-3" />
+                      <span className="ml-6">Saving...</span>
+                    </>
+                  ) : (
+                    "Save to Journal"
+                  )}
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+      </div>
+    </>
   );
 }
 
