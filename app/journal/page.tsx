@@ -1,5 +1,6 @@
 "use client";
 
+import { Suspense } from 'react';
 import { useState, useEffect, useCallback } from 'react';
 import { Calendar } from '@/components/ui/calendar';
 import { format, startOfWeek, endOfWeek } from 'date-fns';
@@ -25,7 +26,7 @@ export type DreamJournal = {
   generated_image_b64?: string;
 };
 
-export default function JournalPage() {
+function JournalContent() {
   const searchParams = useSearchParams();
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [journals, setJournals] = useState<DreamJournal[]>([]);
@@ -329,5 +330,13 @@ export default function JournalPage() {
         </DialogContent>
       </Dialog>
     </div>
+  );
+}
+
+export default function JournalPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <JournalContent />
+    </Suspense>
   );
 } 
