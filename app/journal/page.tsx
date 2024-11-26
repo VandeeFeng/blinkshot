@@ -22,6 +22,7 @@ export type DreamJournal = {
   image_path: string;
   user_id: string;
   dream_date: string;
+  generated_image_b64?: string;
 };
 
 export default function JournalPage() {
